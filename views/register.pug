@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  h1= title
+
+  form(method='POST' action='/register')
+    div.register
+      div.group
+        label.field(for='username') Username:
+        input.in(type='text' name='username' id='username')
+      div.group
+        label.field(for='password') Password:
+        input.in(type='password' name='password' id='password')
+      div.group
+        label.field(for='confirmPassword') Confirm Password:
+        input.in(type='password' name='password' id='confirmPassword')
+    input(type='submit' value='Register')

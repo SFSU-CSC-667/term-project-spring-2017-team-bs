@@ -6,3 +6,23 @@ body {
 a {
   color: #00B7FF;
 }
+
+/*used in register.pug*/
+form div.register {
+	display: flex;
+	flex-direction: column;
+}
+
+form div.register div.group {
+	display: flex;
+	flex-direction: column;
+}
+
+form div.register div.group label.field {
+
+}
+
+form div.register div.group input.in {
+	width: 20%;
+}
+/*end register.pug*/

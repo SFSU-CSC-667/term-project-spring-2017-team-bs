@@ -1,0 +1,629 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: cards; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE cards (
+    cardid integer NOT NULL,
+    rank integer,
+    suit character varying(255),
+    wild boolean
+);
+
+
+ALTER TABLE public.cards OWNER TO postgres;
+
+--
+-- Name: cards_cardid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE cards_cardid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.cards_cardid_seq OWNER TO postgres;
+
+--
+-- Name: cards_cardid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE cards_cardid_seq OWNED BY cards.cardid;
+
+
+--
+-- Name: game_cards; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE game_cards (
+    userid integer,
+    gameid integer,
+    cardid integer,
+    handorder integer
+);
+
+
+ALTER TABLE public.game_cards OWNER TO postgres;
+
+--
+-- Name: games; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE games (
+    gameid integer NOT NULL,
+    room_name character varying(255),
+    password character varying(255),
+    players_turn integer,
+    players_turn_timer time without time zone,
+    last_hand_called integer
+);
+
+
+ALTER TABLE public.games OWNER TO postgres;
+
+--
+-- Name: games_gameid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE games_gameid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.games_gameid_seq OWNER TO postgres;
+
+--
+-- Name: games_gameid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE games_gameid_seq OWNED BY games.gameid;
+
+
+--
+-- Name: hands; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hands (
+    handid integer NOT NULL,
+    description character varying(255)
+);
+
+
+ALTER TABLE public.hands OWNER TO postgres;
+
+--
+-- Name: hands_handid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hands_handid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hands_handid_seq OWNER TO postgres;
+
+--
+-- Name: hands_handid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hands_handid_seq OWNED BY hands.handid;
+
+
+--
+-- Name: messages; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE messages (
+    gameid integer,
+    userid integer,
+    message character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.messages OWNER TO postgres;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE users (
+    userid integer NOT NULL,
+    username character varying(255) NOT NULL,
+    password character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: users_userid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE users_userid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.users_userid_seq OWNER TO postgres;
+
+--
+-- Name: users_userid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE users_userid_seq OWNED BY users.userid;
+
+
+--
+-- Name: cardid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY cards ALTER COLUMN cardid SET DEFAULT nextval('cards_cardid_seq'::regclass);
+
+
+--
+-- Name: gameid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY games ALTER COLUMN gameid SET DEFAULT nextval('games_gameid_seq'::regclass);
+
+
+--
+-- Name: handid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hands ALTER COLUMN handid SET DEFAULT nextval('hands_handid_seq'::regclass);
+
+
+--
+-- Name: userid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY users ALTER COLUMN userid SET DEFAULT nextval('users_userid_seq'::regclass);
+
+
+--
+-- Data for Name: cards; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY cards (cardid, rank, suit, wild) FROM stdin;
+1	2	D	t
+2	2	C	t
+3	2	H	t
+4	2	S	t
+5	3	D	t
+6	3	C	t
+7	3	H	t
+8	3	S	t
+9	4	D	f
+10	4	C	f
+11	4	H	f
+12	4	S	f
+13	5	D	f
+14	5	C	f
+15	5	H	f
+16	5	S	f
+17	6	D	f
+18	6	C	f
+19	6	H	f
+20	6	S	f
+21	7	D	f
+22	7	C	f
+23	7	H	f
+24	7	S	f
+25	8	D	f
+26	8	C	f
+27	8	H	f
+28	8	S	f
+29	9	D	f
+30	9	C	f
+31	9	H	f
+32	9	S	f
+33	10	D	f
+34	10	C	f
+35	10	H	f
+36	10	S	f
+37	11	D	f
+38	11	C	f
+39	11	H	f
+40	11	S	f
+41	12	D	f
+42	12	C	f
+43	12	H	f
+44	12	S	f
+45	13	D	f
+46	13	C	f
+47	13	H	f
+48	13	S	f
+49	14	D	f
+50	14	C	f
+51	14	H	f
+52	14	S	f
+53	15		t
+54	15		t
+\.
+
+
+--
+-- Name: cards_cardid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('cards_cardid_seq', 54, true);
+
+
+--
+-- Data for Name: game_cards; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY game_cards (userid, gameid, cardid, handorder) FROM stdin;
+\.
+
+
+--
+-- Data for Name: games; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY games (gameid, room_name, password, players_turn, players_turn_timer, last_hand_called) FROM stdin;
+\.
+
+
+--
+-- Name: games_gameid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('games_gameid_seq', 1, false);
+
+
+--
+-- Data for Name: hands; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hands (handid, description) FROM stdin;
+1	
+2	one 4
+3	one 5
+4	one 6
+5	one 7
+6	one 8
+7	one 9
+8	one 10
+9	one J
+10	one Q
+11	one K
+12	one A
+13	two 4
+14	two 5
+15	two 6
+16	two 7
+17	two 8
+18	two 9
+19	two 10
+20	two J
+21	two Q
+22	two K
+23	two A
+24	three 4
+25	three 5
+26	three 6
+27	three 7
+28	three 8
+29	three 9
+30	three 10
+31	three J
+32	three Q
+33	three K
+34	three A
+35	straight
+36	flush D
+37	flush C
+38	flush H
+39	flush S
+40	full house 4
+41	full house 5
+42	full house 6
+43	full house 7
+44	full house 8
+45	full house 9
+46	full house 10
+47	full house J
+48	full house Q
+49	full house K
+50	full house A
+51	four 4
+52	four 5
+53	four 6
+54	four 7
+55	four 8
+56	four 9
+57	four 10
+58	four J
+59	four Q
+60	four K
+61	four A
+62	straight flush
+63	five 4
+64	five 5
+65	five 6
+66	five 7
+67	five 8
+68	five 9
+69	five 10
+70	five J
+71	five Q
+72	five K
+73	five A
+74	six 4
+75	six 5
+76	six 6
+77	six 7
+78	six 8
+79	six 9
+80	six 10
+81	six J
+82	six Q
+83	six K
+84	six A
+85	seven 4
+86	seven 5
+87	seven 6
+88	seven 7
+89	seven 8
+90	seven 9
+91	seven 10
+92	seven J
+93	seven Q
+94	seven K
+95	seven A
+96	eight 4
+97	eight 5
+98	eight 6
+99	eight 7
+100	eight 8
+101	eight 9
+102	eight 10
+103	eight J
+104	eight Q
+105	eight K
+106	eight A
+107	nine 4
+108	nine 5
+109	nine 6
+110	nine 7
+111	nine 8
+112	nine 9
+113	nine 10
+114	nine J
+115	nine Q
+116	nine K
+117	nine A
+118	ten 4
+119	ten 5
+120	ten 6
+121	ten 7
+122	ten 8
+123	ten 9
+124	ten 10
+125	ten J
+126	ten Q
+127	ten K
+128	ten A
+129	eleven 4
+130	eleven 5
+131	eleven 6
+132	eleven 7
+133	eleven 8
+134	eleven 9
+135	eleven 10
+136	eleven J
+137	eleven Q
+138	eleven K
+139	eleven A
+140	twelve 4
+141	twelve 5
+142	twelve 6
+143	twelve 7
+144	twelve 8
+145	twelve 9
+146	twelve 10
+147	twelve J
+148	twelve Q
+149	twelve K
+150	twelve A
+151	thirteen 4
+152	thirteen 5
+153	thirteen 6
+154	thirteen 7
+155	thirteen 8
+156	thirteen 9
+157	thirteen 10
+158	thirteen J
+159	thirteen Q
+160	thirteen K
+161	thirteen A
+162	fourteen 4
+163	fourteen 5
+164	fourteen 6
+165	fourteen 7
+166	fourteen 8
+167	fourteen 9
+168	fourteen 10
+169	fourteen J
+170	fourteen Q
+171	fourteen K
+172	fourteen A
+\.
+
+
+--
+-- Name: hands_handid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hands_handid_seq', 172, true);
+
+
+--
+-- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY messages (gameid, userid, message) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY users (userid, username, password) FROM stdin;
+\.
+
+
+--
+-- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('users_userid_seq', 1, false);
+
+
+--
+-- Name: cards_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY cards
+    ADD CONSTRAINT cards_pkey PRIMARY KEY (cardid);
+
+
+--
+-- Name: games_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY games
+    ADD CONSTRAINT games_pkey PRIMARY KEY (gameid);
+
+
+--
+-- Name: hands_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hands
+    ADD CONSTRAINT hands_pkey PRIMARY KEY (handid);
+
+
+--
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (userid);
+
+
+--
+-- Name: users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
+-- Name: game_cards_cardid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY game_cards
+    ADD CONSTRAINT game_cards_cardid_fkey FOREIGN KEY (cardid) REFERENCES cards(cardid);
+
+
+--
+-- Name: game_cards_gameid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY game_cards
+    ADD CONSTRAINT game_cards_gameid_fkey FOREIGN KEY (gameid) REFERENCES games(gameid);
+
+
+--
+-- Name: game_cards_userid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY game_cards
+    ADD CONSTRAINT game_cards_userid_fkey FOREIGN KEY (userid) REFERENCES users(userid);
+
+
+--
+-- Name: games_last_hand_called_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY games
+    ADD CONSTRAINT games_last_hand_called_fkey FOREIGN KEY (last_hand_called) REFERENCES hands(handid);
+
+
+--
+-- Name: messages_gameid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY messages
+    ADD CONSTRAINT messages_gameid_fkey FOREIGN KEY (gameid) REFERENCES games(gameid);
+
+
+--
+-- Name: messages_userid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY messages
+    ADD CONSTRAINT messages_userid_fkey FOREIGN KEY (userid) REFERENCES users(userid);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
