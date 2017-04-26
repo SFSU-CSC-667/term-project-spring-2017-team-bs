@@ -1,5 +1,19 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  
+  h1 Login
+
+  if (message != '')
+    .alert.alert-danger #{message}
+
+  form(method='POST' action='/login')
+    div.form-group
+      label(for='username') Username: 
+      input.form-control#username(type='text' name='username')
+    div.form-group
+      label(for='password') Password: 
+      input.form-control#password(type='password' name='password')
+    input.btn.btn-default(type='submit' value='Log in')
+
+  a(href='/register') Or create an account here

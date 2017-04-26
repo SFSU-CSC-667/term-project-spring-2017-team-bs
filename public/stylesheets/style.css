@@ -3,26 +3,24 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-a {
-  color: #00B7FF;
+div.chatbox ul#messages {
+  list-style-type: none;
+  padding: 10px;
+  width: 100%;
 }
 
-/*used in register.pug*/
-form div.register {
-	display: flex;
-	flex-direction: column;
+div.chatbox ul#messages li {
+  padding: 5px 10px;
 }
 
-form div.register div.group {
-	display: flex;
-	flex-direction: column;
+div.chatbox ul#messages li:nth-child(odd) {
+  background: #eee;
 }
 
-form div.register div.group label.field {
-
+div.chatbox input.chatinput {
+  width: auto;
 }
 
-form div.register div.group input.in {
-	width: 20%;
+div.chatbox button.chatsend {
+  width: auto;
 }
-/*end register.pug*/

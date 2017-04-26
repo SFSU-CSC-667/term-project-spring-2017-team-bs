@@ -2,15 +2,25 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #{title}
+  p main screen should go here
+  p i.e. create and join lobby
 
-  form(method='GET' action='/login')
-    div
-      label(for='username') Username: 
-      input(type='text' name='username' id='username')
-    div
-      label(for='password') Password: 
-      input(type='password' name='password' id='password')
-    input(type='submit' value='Log in')
+  .container
+    .row
+      .col-md-6.col-lg-6
+        .row
+          p Create a game
+          form(method='POST' action='/games' onSubmit='return checkRoomName()')
+            div.form-group
+              label(for='room_name') Room Name
+              input.form-control#room_name(type='text' name='room_name')
+            div.form-group
+              label(for='password') Password (optional)
+              input.form-control#password(type='password' name='password')
+            input.btn.btn-default(type='submit' value='Create Game')
+      .col-md-6.col-lg-6
+        .row
+          p Join an open game
+          ul#openGames
 
-  a(onClick='register()') Or create an account here
+  script(src='/javascripts/home.js')

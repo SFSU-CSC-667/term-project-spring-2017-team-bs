@@ -8,6 +8,9 @@ var app = require('../app');
 var debug = require('debug')('bs-poker:server');
 var http = require('http');
 
+const socket = require('../socket/');
+const passport = require('../config/passport.js');
+
 /**
  * Get port from environment and store in Express.
  */
@@ -20,6 +23,8 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+socket.init(app, server);
+passport.init();
 
 /**
  * Listen on provided port, on all network interfaces.
