@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const db = require('../db')
+const db = require('../models')
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -12,7 +12,7 @@ router.get('/', function(req, res, next) {
   			res.send(users);
   		})
   		.catch(error => {
-  			console.log("error");
+  			console.log(error);
   		});
 });
 

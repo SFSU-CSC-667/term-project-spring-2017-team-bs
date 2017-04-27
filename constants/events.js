@@ -1,5 +1,8 @@
-const LOBBY = 'lobby'
-const USER_JOINED = 'user-joined'
-const MESSAGE_SEND = 'message-send'
+const CALL_BS = 'call-bs';
+const CALL_HAND = 'call-hand';
+const LOBBY = 'lobby';
+const MESSAGE_SEND = 'message-send';
+const USER_JOINED = 'user-joined';
+const USER_LEFT = 'user-left';
 
-module.exports = { LOBBY, USER_JOINED, MESSAGE_SEND }
+module.exports = { CALL_BS, CALL_HAND, LOBBY, MESSAGE_SEND, USER_JOINED, USER_LEFT }

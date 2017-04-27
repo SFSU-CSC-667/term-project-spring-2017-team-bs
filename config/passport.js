@@ -5,32 +5,32 @@ const users = require('../models/users.js')
 
 const init = () => {
 
-  passport.serializeUser(function(user, done) {
-    done(null, user.userid);
+  passport.serializeUser(function(user, cb) {
+    cb(null, user.userid);
   });
 
-  passport.deserializeUser(function(id, done) {
+  passport.deserializeUser(function(id, cb) {
     users.findById(id, function(err, user) {
       if (err) { 
-        return done(err);
+        return cb(err);
       }
-      done(null, user);
+      cb(null, user);
     })
   })
 
   passport.use(new LocalStrategy(
-    function(username, password, done) {
+    function(username, password, cb) {
       users.findByUsername(username, function (err, user) {
         if (err) {
-          return done(err);
+          return cb(err);
         }
         if (!user) {
-          return done(null, false, { message: 'Incorrect username' });
+          return cb(null, false, { message: 'Incorrect username' });
         }
         if (user.password !== password) {
-          return done(null, false, { message: 'Incorrect password' });
+          return cb(null, false, { message: 'Incorrect password' });
         }
-        return done(null, user);
+        return cb(null, user);
       })
     }));
 };

@@ -1,7 +1,11 @@
 extends layout
 
 block content
-  h1= title
+  h1 BS Poker
+
+  if (message != '')
+    .alert.alert-danger #{message}
+    
   p main screen should go here
   p i.e. create and join lobby
 
