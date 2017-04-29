@@ -1,5 +1,25 @@
 const db = require('./index');
 
+exports.addUser = function(userid, gameid, cb) {
+  db.none('INSERT INTO game_cards(userid, gameid) VALUES($1, $2)', [userid, gameid])
+    .then(() => {
+      cb(null, 'added user to gamecards');
+    })
+    .catch(err => {
+      cb(err, 'could not add user to gamecards');
+    });
+};
+
+exports.findNumberOfUsersByGameId = function(gameid, cb) {
+  db.any('SELECT COUNT(*) AS count FROM game_cards WHERE gameid=$1', [gameid])
+    .then(data => {
+      cb(null, data);
+    })
+    .catch(err => {
+      cb(err, 'err in gamecards.findUsersByGameId');
+    });
+};
+
 exports.findCardsInPlay = function(gameid, cb) {
   db.any('SELECT * FROM game_cards WHERE gameid=$1 AND userid!=0', [gameid])
     .then(data => {

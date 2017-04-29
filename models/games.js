@@ -3,7 +3,7 @@ const db = require('./index');
 exports.create = function(room_name, password, cb) {
   db.none('INSERT INTO games(room_name, password) VALUES($1, $2)', [room_name, password])
     .then(() => {
-      cb(null, 'created new game');
+      cb(null, 'created a new game');
     })
     .catch(err => {
       cb(err, 'could not create new game');
@@ -28,4 +28,14 @@ exports.findById = function(id, cb) {
     .catch(err => {
       cb(err, 'could not find a game by id');
     });
+};
+
+exports.getAllGames = function(cb) {
+  db.any('SELECT * FROM games')
+    .then(data => {
+      cb(null, data);
+    })
+    .catch(err => {
+      cb(err, 'err in getAllGames');
+    })
 };

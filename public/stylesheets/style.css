@@ -3,24 +3,20 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-div.chatbox ul#messages {
+ul#messages {
   list-style-type: none;
   padding: 10px;
   width: 100%;
 }
 
-div.chatbox ul#messages li {
+ul#messages li {
   padding: 5px 10px;
 }
 
-div.chatbox ul#messages li:nth-child(odd) {
+ul#messages li:nth-child(odd) {
   background: #eee;
 }
 
-div.chatbox input.chatinput {
-  width: auto;
-}
-
-div.chatbox button.chatsend {
-  width: auto;
+#createGame, #joinGame {
+  padding: 10px;
 }

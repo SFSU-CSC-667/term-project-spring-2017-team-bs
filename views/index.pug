@@ -1,30 +1,76 @@
 extends layout
 
 block content
-  h1 BS Poker
+
+  h1.text-center BS Poker
 
   if (message != '')
     .alert.alert-danger #{message}
-    
-  p main screen should go here
-  p i.e. create and join lobby
 
   .container
-    .row
-      .col-md-6.col-lg-6
-        .row
-          p Create a game
+    .row.text-center#createGame
+      .btn.btn-info(type='button', data-toggle='modal', data-target='#createGameModal') Create a game
+    .row.text-center#joinGame
+      .btn.btn-info(type='button', data-toggle='modal', data-target='#joinGameModal') Join a game
+
+  .modal.fade#createGameModal(role='dialog')
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') X
+          h4.modal-title Create a game
+        .modal-body
           form(method='POST' action='/games' onSubmit='return checkRoomName()')
-            div.form-group
+            .form-group
               label(for='room_name') Room Name
               input.form-control#room_name(type='text' name='room_name')
-            div.form-group
+            .form-group
               label(for='password') Password (optional)
               input.form-control#password(type='password' name='password')
-            input.btn.btn-default(type='submit' value='Create Game')
-      .col-md-6.col-lg-6
-        .row
-          p Join an open game
-          ul#openGames
+            input.btn.btn-info(type='submit' value='Create Game')
+
+  .modal.fade#joinGameModal(role='dialog')
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') X
+          h4.modal-title Join a game
+        .modal-body
+          table.table.table-hover.table-condensed
+            tr
+              th Room ID
+              th Room Name
+              th Password?
+              th Join
+            each game in openGames
+              tr
+                td= game.gameid
+                td= game.room_name
+                if game.password == ''
+                  td No
+                else
+                  td Yes
+                td
+                  if game.password == ''
+                    form(method='POST' action='/games/join')
+                      input(type='hidden' name='gameid' value=game.gameid)
+                      input.btn.btn-info(type='submit' value='Join')
+                  else
+                    .btn.btn-info(type='button', data-toggle='modal', data-target='#joinGamePasswordModal') Join
+
+  .modal.fade#joinGamePasswordModal(role='dialog')
+    .modal-dialog.modal-sm
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') X
+          h4.modal-title Enter the password
+        .modal-body
+          form(action='POST', method='/games/join')
+            .input-group
+              input.form-control(type='text', placeholder='Password')
+              span.input-group-btn
+                input.btn.btn-info(type='submit' value='Join')
+        .modal-footer
+          .btn.btn-default(type='button', data-dismiss='modal') Close
 
   script(src='/javascripts/home.js')
