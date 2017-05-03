@@ -1,6 +1,7 @@
 extends layout
 
 block content
+
   h1 Games
 
   body
@@ -8,60 +9,87 @@ block content
     .hidden#username #{username}
     .container
       .row
-        .col-md-1.col-lg-1
-          button(id='leave') Leave
-        p.text-center.gameroomname Game room name here
+        .btn.btn-danger#leave Leave
       .row      
-        .col-md-9.col-lg-9
+        .col-md-9.col-lg-9#playarea
           .row
             .playerarea.col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
-              .row
-                img(src='...' class='card img-rounded')
+              .row#playerthreecards
               .row
                 p#playerthree username here
           .row
             .playerarea.col-md-4.col-lg-4
-              .row
-                img(src='...' class='card img-rounded')
+              .row#playertwocards
               .row
                 p#playertwo username here
-            #deck.col-md-4.col-lg-4
+            .col-md-4.col-lg-4
               .row
-                img(src='...' class='card img-rounded')
+                img.card(src='/images/cardBack.png')
               .row
-                p # cards in deck
+                p#deck # cards in deck
             .playerarea.col-md-4.col-lg-4
-              .row
-                img(src='...' class='card img-rounded')
+              .row#playerfourcards
               .row
                 p#playerfour username here
           .row
             .col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
               .btn.btn-success#start Start
+              .btn.btn-danger#bs BS
           .row
             .col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
               p timer
           .row
             .playerarea.col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
-              .row
-                img(src='...' class='card img-rounded')
+              .row#playeronecards
               .row
                 p#playerone username here
-          .row
-            #calls
-              p calls here
+          .row#calls
+            p Calls
+            form#callForm
+              .col-md-5.col-lg-5
+                p Quantity
+                select.form-control#callQuantity
+                  option one
+                  option two
+                  option three
+                  option four
+                  option five
+                  option six
+                  option seven
+                  option eight
+                  option nine
+                  option ten
+                  option eleven
+                  option twelve
+                  option thirteen
+                  option fourteen
+              .col-md-5.col-lg-5
+                p Rank
+                select.form-control#callRank
+                  option 4
+                  option 5
+                  option 6
+                  option 7
+                  option 8
+                  option 9
+                  option 10
+                  option J
+                  option Q
+                  option K
+                  option A
+              .col-md-2.col-lg-2
+                .btn.btn-success#call(type='submit') Call
         .col-md-3.col-lg-3
           #settings
-            p current settings here
-            p blahblahblah
+            p#numPlayers Current # of players:
+            p#turn Player's turn:
           #lasthandcalled
-            p last hand called here   
+            p Last Hand Called:
+            p#lastHand
           #chatbox
-            .row
-              ul#messages
-            .row
-              form#chatform
-                .input-group
-                  input.form-control#chatinput(type='text', placeholder='Chat', autocomplete='off')
-                  .input-group-btn
-                    .btn.btn-default#send(type='submit') Send
+            ul#messages
+            form#chatform
+              .input-group
+                input.form-control#chatinput(type='text' placeholder='Chat' autocomplete='off' maxlength='30')
+                .input-group-btn
+                  .btn.btn-default#send(type='submit') Send

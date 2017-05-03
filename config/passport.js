@@ -10,7 +10,7 @@ const init = () => {
   });
 
   passport.deserializeUser(function(id, cb) {
-    users.findById(id, function(err, user) {
+    users.findByIdPassport(id, function(err, user) {
       if (err) { 
         return cb(err);
       }
@@ -20,7 +20,7 @@ const init = () => {
 
   passport.use(new LocalStrategy(
     function(username, password, cb) {
-      users.findByUsername(username, function (err, user) {
+      users.findByUsernamePassport(username, function (err, user) {
         if (err) {
           return cb(err);
         }

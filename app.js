@@ -13,7 +13,6 @@ const flash = require('connect-flash');
 const db = require('./models/index');
 
 var index = require('./routes/index');
-var users = require('./routes/users');
 
 const games = require('./routes/games/index');
 const gamesid = require('./routes/games/:id/index');
@@ -41,7 +40,6 @@ app.use(passport.session());
 app.use(flash());
 
 app.use('/', index);
-app.use('/users', users);
 
 app.use('/games', games);
 app.use('/games/:id', gamesid);

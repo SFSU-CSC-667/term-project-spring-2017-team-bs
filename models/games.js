@@ -1,41 +1,35 @@
 const db = require('./index');
 
-exports.create = function(room_name, password, cb) {
-  db.none('INSERT INTO games(room_name, password) VALUES($1, $2)', [room_name, password])
-    .then(() => {
-      cb(null, 'created a new game');
-    })
-    .catch(err => {
-      cb(err, 'could not create new game');
-    });
-};
+const ALL = 'SELECT * FROM games'
+const CHANGE_STATUS = 'UPDATE games SET status=$1 WHERE gameid=$2'
+const CREATE = 'INSERT INTO games(room_name, password, status, players_turn) VALUES($1, $2, $3, $4) RETURNING *'
+const FIND_BY_ID = 'SELECT * FROM games WHERE gameid=$1'
+const FIND_BY_NAME = 'SELECT * FROM games WHERE room_name=$1'
+const UPDATE_LAST_HAND_CALLED = 'UPDATE games SET last_hand_called=$1 WHERE gameid=$2 RETURNING *'
 
-exports.findByName = function(room_name, cb) {
-  db.one('SELECT * FROM games WHERE room_name=$1', [room_name])
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'could not find a game by name');
-    });
-};
+module.exports = {
+  all: function() {
+    return db.any( ALL )
+  },
 
-exports.findById = function(id, cb) {
-  db.one('SELECT * FROM games WHERE gameid=$1', [id])
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'could not find a game by id');
-    });
-};
+  changeStatus: function(status, gameid) {
+    return db.any( CHANGE_STATUS, [status, gameid] )
+  },
 
-exports.getAllGames = function(cb) {
-  db.any('SELECT * FROM games')
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'err in getAllGames');
-    })
-};
+  create: function(room_name, password, players_turn) {
+    return db.one( CREATE, [room_name, password, 'open', players_turn] )
+  },
+
+  findById: function(id) {
+    return db.one( FIND_BY_ID, id )
+  },
+
+  findByName: function(room_name) {
+    return db.one( FIND_BY_NAME, room_name )
+  },
+
+  updateLastHandCalled: function(handid, gameid) {
+    return db.one( UPDATE_LAST_HAND_CALLED, [handid, gameid] )
+  }
+  
+}

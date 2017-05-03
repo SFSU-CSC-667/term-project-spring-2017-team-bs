@@ -1,41 +1,24 @@
 const db = require('./index');
 
-exports.findById = function(id, cb) {
-  db.one('SELECT * FROM cards WHERE cardid=$1', [id])
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'could not find card by id');
-    });
-};
+const FIND_BY_ID = 'SELECT * FROM cards WHERE cardid=$1'
+const FIND_BY_RANK = 'SELECT * FROM cards WHERE rank=$1'
+const FIND_BY_SUIT = 'SELECT * FROM cards WHERE suit=$1'
+const FIND_BY_WILD = 'SELECT * FROM cards WHERE wild=$1'
 
-exports.findByRank = function(rank, cb) {
-  db.many('SELECT * FROM cards WHERE rank=$1', [id])
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'could not find cards by rank');
-    });
-};
+module.exports = {
+  findById: function(id) {
+    return db.one( FIND_BY_ID, id )
+  },
 
-exports.findBySuit = function(suit, cb) {
-  db.many('SELECT * FROM cards WHERE suit=$1', [id])
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'could not find cards by suit');
-    });
-};
+  findByRank: function(rank) {
+    return db.many( FIND_BY_RANK, rank )
+  },
 
-exports.findByWild = function(wild, cb) {
-  db.many('SELECT * FROM cards WHERE wild=$1', [id])
-    .then(data => {
-      cb(null, data);
-    })
-    .catch(err => {
-      cb(err, 'could not find cards by wild');
-    });
-};
+  findBySuit: function(suit) {
+    return db.many( FIND_BY_SUIT, suit )
+  },
+
+  findByWild: function(wild) {
+    return db.many( FIND_BY_WILD, wild )
+  }
+}
