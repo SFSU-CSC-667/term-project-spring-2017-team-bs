@@ -14,7 +14,8 @@ html
     .navbar.navbar-default
       .container-fluid
         .navbar-header
-          a.navbar-brand(href='/') Home
+          a.navbar-brand(href='/')
+            img#navbarlogo(src='/images/bsHome.png')
         ul.nav.navbar-nav.navbar-right
           if (typeof(username) !== 'undefined')
             p.navbar-text Hello #{username}!

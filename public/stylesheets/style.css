@@ -36,3 +36,7 @@ ul#messages li:nth-child(odd) {
   width: 50px;
   height: auto;
 }
+
+#navbarlogo {
+  height: 100%;
+}

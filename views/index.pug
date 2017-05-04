@@ -2,12 +2,12 @@ extends layout
 
 block content
 
-  h1.text-center BS Poker
-
   if (message != '')
     .alert.alert-danger #{message}
 
-  .container
+  .container#homecontainer
+    .row
+      img.img-responsive(src='/images/BSPOKER.png')
     .row.text-center#createGame
       .btn.btn-info(type='button', data-toggle='modal', data-target='#createGameModal') Create a game
     .row.text-center#joinGame
