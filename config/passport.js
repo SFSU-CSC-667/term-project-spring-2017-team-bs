@@ -1,5 +1,6 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
 
 const users = require('../models/users.js')
 
@@ -20,16 +21,18 @@ const init = () => {
 
   passport.use(new LocalStrategy(
     function(username, password, cb) {
-      users.findByUsernamePassport(username, function (err, user) {
+        users.findByUsernamePassport(username, function (err, user) {
         if (err) {
           return cb(err);
         }
         if (!user) {
           return cb(null, false, { message: 'Incorrect username' });
         }
-        if (user.password !== password) {
-          return cb(null, false, { message: 'Incorrect password' });
-        }
+        bcrypt.compare(password, user.password, function(err, res) {
+          if(res == false)
+            return cb(null, false, { message: 'Incorrect password' });
+        })
+        
         return cb(null, user);
       })
     }));
