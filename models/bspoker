@@ -86,6 +86,7 @@ CREATE TABLE games (
     gameid integer NOT NULL,
     room_name character varying(255),
     password character varying(255),
+    status character varying(255),
     players_turn integer,
     players_turn_timer time without time zone,
     last_hand_called integer
@@ -155,7 +156,7 @@ ALTER SEQUENCE hands_handid_seq OWNED BY hands.handid;
 CREATE TABLE messages (
     gameid integer,
     userid integer,
-    message character varying(255) NOT NULL
+    messages character varying(255) NOT NULL
 );
 
 
@@ -304,7 +305,7 @@ COPY game_cards (userid, gameid, cardid, handorder) FROM stdin;
 -- Data for Name: games; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY games (gameid, room_name, password, players_turn, players_turn_timer, last_hand_called) FROM stdin;
+COPY games (gameid, room_name, password, status, players_turn, players_turn_timer, last_hand_called) FROM stdin;
 \.
 
 
@@ -312,7 +313,7 @@ COPY games (gameid, room_name, password, players_turn, players_turn_timer, last_
 -- Name: games_gameid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('games_gameid_seq', 1, false);
+SELECT pg_catalog.setval('games_gameid_seq', 6, true);
 
 
 --
@@ -506,7 +507,7 @@ SELECT pg_catalog.setval('hands_handid_seq', 172, true);
 -- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY messages (gameid, userid, message) FROM stdin;
+COPY messages (gameid, userid, messages) FROM stdin;
 \.
 
 
@@ -522,7 +523,7 @@ COPY users (userid, username, password) FROM stdin;
 -- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('users_userid_seq', 1, false);
+SELECT pg_catalog.setval('users_userid_seq', 3, true);
 
 
 --
