@@ -2,10 +2,11 @@ const db = require('./index');
 
 const ALL_OPEN = 'SELECT * FROM games WHERE status=\'open\''
 const CHANGE_STATUS = 'UPDATE games SET status=$1 WHERE gameid=$2'
-const CREATE = 'INSERT INTO games(room_name, password, status, players_turn) VALUES($1, $2, $3, $4) RETURNING *'
+const CREATE = 'INSERT INTO games(room_name, password, status, players_turn, last_hand_called) VALUES($1, $2, $3, $4, $5) RETURNING *'
+const DELETE_GAME = 'DELETE FROM games WHERE gameid=$1'
 const FIND_BY_ID = 'SELECT * FROM games WHERE gameid=$1'
 const FIND_BY_NAME = 'SELECT * FROM games WHERE room_name=$1'
-const UPDATE_LAST_HAND_CALLED = 'UPDATE games SET last_hand_called=$1 WHERE gameid=$2 RETURNING *'
+const UPDATE_LAST_HAND_CALLED = 'UPDATE games SET last_hand_called=$1 WHERE gameid=$2'
 
 module.exports = {
   allOpen: function() {
@@ -17,7 +18,11 @@ module.exports = {
   },
 
   create: function(room_name, password, players_turn) {
-    return db.one( CREATE, [room_name, password, 'open', players_turn] )
+    return db.one( CREATE, [room_name, password, 'open', players_turn, 1] )
+  },
+
+  deleteGame: function(gameid) {
+    return db.none( DELETE_GAME, gameid )
   },
 
   findById: function(id) {
@@ -29,7 +34,7 @@ module.exports = {
   },
 
   updateLastHandCalled: function(handid, gameid) {
-    return db.one( UPDATE_LAST_HAND_CALLED, [handid, gameid] )
+    return db.none( UPDATE_LAST_HAND_CALLED, [handid, gameid] )
   }
   
 }

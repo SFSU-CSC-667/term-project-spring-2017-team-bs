@@ -4,29 +4,29 @@ const url = window.location.pathname;
 
 var gamecards = [];
 
-if(url.search("games")) {
-  gameid = url.split("/")[2];
-  userid = $('#userid').text();
-  username = $('#username').text();
+var gameid = url.split("/")[2];
+var userid = $('#userid').text();
+var username = $('#username').text();
 
-  myInfo = {
-    gameid: gameid,
-    userid: userid,
-    username: username,
-    numberOfCards: 3
-  }
+var myInfo = {
+  gameid: gameid,
+  userid: userid,
+  username: username,
+  numberOfCards: 3
+}
 
-  gameState = {
-    gameid: gameid,
-    status: 'open',
-    numberOfPlayers: 0,
-    cardsInDeck: 0,
-    players: null,
-    turn: null,
-    lastHandCalledId: 1,
-    lastHandCalled: ''
-  }
+var myPlayers = [username];
 
+var gameState = {
+  gameid: gameid,
+  status: 'open',
+  numberOfPlayers: 0,
+  cardsInDeck: 0,
+  players: null,
+  turnId: null,
+  turn: null,
+  lastHandCalledId: 1,
+  lastHandCalled: ''
 }
 
 $(function () {
@@ -34,21 +34,19 @@ $(function () {
   $('#bs').hide();
   $('#playerone').text(username);
 
-  for(var i = 0; i < myInfo.numberOfCards; i++) {
-    $('#playeronecards').append("<img src='/images/cardBack.png' class='card'>");
-    $('#playertwocards').append("<img src='/images/cardBack.png' class='card'>");
-    $('#playerthreecards').append("<img src='/images/cardBack.png' class='card'>");
-    $('#playerfourcards').append("<img src='/images/cardBack.png' class='card'>");
-  }
-
   socket.on('connect', function() {
 
     socket.emit('join-room', myInfo);
-    socket.emit('user-joined', myInfo);
+    socket.emit('user-joined', myInfo, gameState);
+    socket.emit('update-cards', myInfo, gamecards);
     updateGameState(gameState);
     
-    $('#start:not([disabled])').click(function() {
-      socket.emit('start', myInfo);
+    $('#start').click(function() {
+      if($('#start').prop('disabled')) {
+        return false;
+      } else {
+        socket.emit('start', myInfo);
+      }
     })
 
     $('#chatform').submit(function(){
@@ -63,26 +61,34 @@ $(function () {
 
     $('#leave').click(function() {
       if(window.confirm("Are you sure you want to leave?") == true) {
-        socket.emit('user-left', myInfo);
+        socket.emit('user-left', myInfo, gameState);
         window.location = '/';
       }
     })
 
-    $('#bs:not([disabled])').click(function() {
-      socket.emit('call-bs', gameState);
+    $('#bs').click(function() {
+      if($('#bs').prop('disabled')) {
+        return false;
+      } else {
+        socket.emit('call-bs', myInfo, gameState);
+      }
     })
 
-    $('#call:not([disabled])').click(function() {
-      var callQuantity = $('#callQuantity').val();
-      var callRank = $('#callRank').val();
-      socket.emit('call-hand', gameState, callQuantity, callRank);
+    $('#call').click(function() {
+      if($('#call').prop('disabled')) {
+        return false;
+      } else {
+        var callQuantity = $('#callQuantity').val();
+        var callRank = $('#callRank').val();
+        socket.emit('call-hand', myInfo, gameState, callQuantity, callRank);
+      }
     })
 
     socket.on('message-send', function(data) {
       $('#messages').append($('<li>').text(data.username + ": " + data.message));
     })
 
-    socket.on('user-joined', function(data, state) {
+    socket.on('user-joined', function(data) {
       $('#messages').append($('<li>').text(data.username + " has joined!"));
       updateGameState(gameState);
     })
@@ -97,48 +103,110 @@ $(function () {
       if(gameState.status == 'open') {
         $('#start').show();
         $('#bs').hide();
+        $('#call').prop('disabled', true);
       } else {
         $('#start').hide();
         $('#bs').show();
       }
+      console.log('update status: ' + gameState.status);
     })
 
     socket.on('update-number-of-players', function(state) {
       gameState.numberOfPlayers = state.numberOfPlayers;
       $('#numPlayers').text("Current # of players: " + gameState.numberOfPlayers);
+      console.log('update numplayers: ' + gameState.numberOfPlayers);
     })
 
     socket.on('update-cards-in-deck', function(state) {
       gameState.cardsInDeck = state.cardsInDeck;
       $('#deck').text(gameState.cardsInDeck);
+      console.log('update deck: ' + gameState.cardsInDeck);
     })
 
     socket.on('update-players', function(state) {
+
+      //current user is always p1
+      myPlayers = [myInfo.username];
       gameState.players = state.players;
-      console.log('players: ' + gameState.players);
+
+      //push other users
+      for(var i=0; i<gameState.players.length; i++) {
+        if(myPlayers[myPlayers.indexOf(myInfo.username)] != gameState.players[i].username) {
+          myPlayers.push(gameState.players[i].username);
+        }
+      }
+      switch(myPlayers.length) {
+        case 1:
+          $('#playerone').text(myPlayers[0]);
+          break;
+        case 2:
+          $('#playerone').text(myPlayers[0]);
+          $('#playertwo').text(myPlayers[1]);
+          break;
+        case 3:
+          $('#playerone').text(myPlayers[0]);
+          $('#playertwo').text(myPlayers[1]);
+          $('#playerthree').text(myPlayers[2]);
+          break;
+        case 4:
+          $('#playerone').text(myPlayers[0]);
+          $('#playertwo').text(myPlayers[1]);
+          $('#playerthree').text(myPlayers[2]);
+          $('#playerfour').text(myPlayers[3]);
+          break;
+      }
+      console.log('update players: ' + gameState.players);
     })
 
     socket.on('update-turn', function(state) {
+      gameState.turnId = state.turnId;
       gameState.turn = state.turn;
       $('#turn').text("Player's turn: " + gameState.turn);
 
-      if (gameState.turn == myInfo.username) {
-        $('#bs').removeClass('disabled');
-        $('#call').removeClass('disabled');
-        $('#callQuantity').removeClass('disabled');
-        $('#callRank').removeClass('disabled');
+      if (gameState.turnId == myInfo.userid) {
+        $('#bs').prop('disabled', false);
+        $('#call').prop('disabled', false);
+        $('#callQuantity').prop('disabled', false);
+        $('#callRank').prop('disabled', false);
       } else {
-        $('#bs').attr('disabled', 'disabled');
-        $('#call').attr('disabled', 'disabled');
-        $('#callQuantity').attr('disabled', 'disabled');
-        $('#callRank').attr('disabled', 'disabled');
+        $('#bs').prop('disabled', true);
+        $('#call').prop('disabled', true);
+        $('#callQuantity').prop('disabled', true);
+        $('#callRank').prop('disabled', true);
       }
+      console.log('update turnId: ' + gameState.turnId);
+      console.log('update turn: ' + gameState.turn);
     })
 
     socket.on('update-last-hand-called', function(state) {
       gameState.lastHandCalled = state.lastHandCalled;
       gameState.lastHandCalledId = state.lastHandCalledId;
-      $('#lastHand').text(gameState.lastHandCalled);
+      if(gameState.lastHandCalled == '') {
+        $('#lastHand').text('none');
+      } else {
+        $('#lastHand').text(gameState.lastHandCalled);
+      }
+      console.log('update last hand: ' + gameState.lastHandCalled);
+    })
+
+    socket.on('update-cards', function(info, cards) {
+      if(gameState.status == 'open') {
+        myInfo.numberOfCards = 3;
+      } else {
+        myInfo.numberOfCards = info.numberOfCards;
+      }
+      gamecards = cards;
+      if(gamecards.length > 0) {
+        emptyHand();
+        for(var i=0; i<myInfo.numberOfCards; i++) {
+          console.log(gamecards[i].cardid)
+          renderCard(gamecards[i].cardid);
+        }
+      }
+    })
+
+    socket.on('update-opponent-cards', function(opponentCards) {
+
     })
 
     socket.on('start', function(data) {
@@ -150,15 +218,14 @@ $(function () {
 
     socket.on('draw-cards', function(cards) {
       gamecards = cards;
-      console.log(myInfo.numberOfCards);
-      console.log(gamecards);
       for(var i=0; i<myInfo.numberOfCards; i++) {
         renderCard(gamecards[i].cardid);
       }
       updateGameState(gameState);
     })
 
-    socket.on('next-players-turn', function(state) {
+    socket.on('next-players-turn', function(info, state) {
+      $('#messages').append($('<li>').text("System: " + info.username + " has called " + state.lastHandCalled));
       updateGameState(gameState);
     })
 
@@ -166,7 +233,8 @@ $(function () {
       alert("Your call is too low! Call something higher");
     })
 
-    socket.on('new-round', function(state) {
+    socket.on('new-round', function(info, state) {
+      $('#messages').append($('<li>').text("System: " + info.username + " has called BS"));
       emptyHand();
       socket.emit('draw-cards', myInfo);
     })

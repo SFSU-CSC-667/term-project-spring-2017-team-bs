@@ -93,3 +93,7 @@ block content
                 input.form-control#chatinput(type='text' placeholder='Chat' autocomplete='off' maxlength='30')
                 .input-group-btn
                   .btn.btn-default#send(type='submit') Send
+
+block sockets
+  script(src='/socket.io/socket.io.js')
+  script(src='/javascripts/games.js')

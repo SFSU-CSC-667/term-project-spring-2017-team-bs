@@ -19,7 +19,9 @@ router.get('/', function(req, res, next) {
           openGames: data
         })
       })
-      .catch(err => {})
+      .catch(err => {
+        console.log(err)
+      })
   } else {
     games.allOpen()
       .then(data => {
@@ -29,7 +31,9 @@ router.get('/', function(req, res, next) {
           openGames: data
         })
       })
-      .catch(err => {})
+      .catch(err => {
+        console.log(err)
+      })
   }
 });
 
@@ -46,13 +50,16 @@ router.get('/register', function(req, res, next) {
 
 //user has registered
 router.post('/register', function(req, res, next) {
-  bcrypt.hash(req.body.password, 10, function(err, hash) {
-    users.create(req.body.username, hash)
-      .then(user => {
-        res.redirect('/login');
-      })
-      .catch(err => {})
-  })
+  bcrypt.hash(req.body.password, 10)
+    .then(hash => {
+      return users.create(req.body.username, hash)
+    })
+    .then(user => {
+      res.redirect('/login');
+    })
+    .catch(err => {
+      console.log(err)
+    })
 });
 
 //login page
@@ -80,25 +87,32 @@ router.post('/games', function(req, res, next) {
   } else {
     if(req.body.password == '') {
       games.create(req.body.room_name, req.body.password, req.user.userid)
-        .then(data => {
-          gamecards.create(data.gameid)
-            .then(() => {
-              res.redirect('/games/' + data.gameid)
-            })
-            .catch(err => {})
+        .then(data1 => {
+          return gamecards.create(data1.gameid)
+        })
+        .then(data2 => {
+          return gamecards.addUser(req.user.userid, data2[0].gameid)
+        })
+        .then(data3 => {
+          res.redirect('/games/' + data3.gameid)
+        })
+        .catch(err => {
+          console.log(err)
         })
     } else {
-      bcrypt.hash(req.body.password, 10, function(err, hash) {
-        games.create(req.body.room_name, hash, req.user.userid)
-          .then(data => {
-            gamecards.create(data.gameid)
-              .then(() => {
-                res.redirect('/games/' + data.gameid)
-              })
-              .catch(err => {})
-          })
-          .catch(err => {})
-      })
+      bcrypt.hash(req.body.password, 10)
+        .then(hash => {
+          return games.create(req.body.room_name, hash, req.user.userid)
+        })
+        .then(data1 => {
+          return gamecards.create(data1.gameid)
+        })
+        .then(data2 => {
+          res.redirect('/games/' + data2.gameid)
+        })
+        .catch(err => {
+          console.log(err)
+        })
     }
   }
 });
@@ -112,27 +126,27 @@ router.post('/games/join', function(req, res, next) {
     games.findById(req.body.gameid)
       .then(data1 => {
         if(data1.password !== '') {
-          bcrypt.compare(req.body.joinPassword, data1.password, function(err, match) {
-            if (match == true) {
-              gamecards.addUser(req.user.userid, req.body.gameid)
-                .then(data2 => {
-                  res.redirect('/games/' + req.body.gameid);
-                })
-                .catch(err => {console.log(err)})
-            } else {
-              req.flash('error', 'Incorrect password');
-              res.redirect('/');
-            }
-          })
+          return bcrypt.compare(req.body.joinPassword, data1.password)
         } else {
-          gamecards.addUser(req.user.userid, req.body.gameid)
-            .then(data2 => {
-              res.redirect('/games/' + req.body.gameid);
-            })
-            .catch(err => {console.log(err)})
+          return new Promise(function(resolve, reject) {
+            resolve(true)
+          })
         }
       })
-      .catch(err => {console.log(err)})
+      .then(match => {
+        if (match == true)
+          return gamecards.addUser(req.user.userid, req.body.gameid)
+        else {
+          req.flash('error', 'Incorrect password')
+          res.redirect('/')
+        }
+      })
+      .then(data2 => {
+        res.redirect('/games/' + data2.gameid)
+      })
+      .catch(err => {
+        console.log(err)
+      })
   }
 });
 

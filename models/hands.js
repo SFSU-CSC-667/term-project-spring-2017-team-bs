@@ -5,10 +5,10 @@ const FIND_BY_DESCRIPTION = 'SELECT * FROM hands WHERE description=$1'
 
 module.exports = {
   findById: function(id) {
-    return db.one( FIND_BY_ID, id )
+    return db.oneOrNone( FIND_BY_ID, id )
   },
 
   findByDescription: function(description) {
-    return db.one( FIND_BY_DESCRIPTION, description )
+    return db.oneOrNone( FIND_BY_DESCRIPTION, description )
   }
 }
