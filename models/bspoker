@@ -154,9 +154,9 @@ ALTER SEQUENCE hands_handid_seq OWNED BY hands.handid;
 --
 
 CREATE TABLE messages (
-    gameid integer,
     userid integer,
-    messages character varying(255) NOT NULL
+    gameid integer,
+    message character varying(255)
 );
 
 
@@ -507,7 +507,7 @@ SELECT pg_catalog.setval('hands_handid_seq', 172, true);
 -- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY messages (gameid, userid, messages) FROM stdin;
+COPY messages (userid, gameid, message) FROM stdin;
 \.
 
 
