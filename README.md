@@ -1,7 +1,7 @@
 # term-project-spring-2017-team-bs
 
 ## BS Poker Game
-Deployed on Heroku: `bspoker.herokuapp.com`
+Deployed on Heroku: <bspoker.herokuapp.com>
 
 ### Local DB Setup:
 1. Install postgres
