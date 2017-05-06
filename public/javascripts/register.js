@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt');
 const db = require('../../db');
 
 function checkCredentials() {
@@ -22,11 +21,6 @@ function checkCredentials() {
     alert("Passwords do not match!");
     return false;
   }
-
-  bcrypt.hash(password.value, 10, function(err, hash) {
-    console.log("pw hash: " + hash);
-    password.innerHTML = hash;
-  })
 
   return true;
 }
