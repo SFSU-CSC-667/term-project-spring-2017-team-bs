@@ -1,5 +1,7 @@
 const pgp = require('pg-promise')();
 
+pgp.pg.defaults.ssl = true;
+
 const localConnection = {
 	database: 'bspoker',
 	user: 'postgres',
