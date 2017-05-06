@@ -1,6 +1,7 @@
 # term-project-spring-2017-team-bs
 
 ## BS Poker Game
+Deployed on Heroku: `bspoker.herokuapp.com`
 
 ### Local DB Setup:
 1. Install postgres
@@ -15,3 +16,10 @@
 3. `npm install`
 4. `npm start`
 5. Open a browser and go to `localhost:3000`
+
+###Things to fix:
+* Closing the tab or browser while in a game will not remove that player from the game (persistence)
+* Players can sometimes draw the same card (all players send an event to draw cards)
+* Turn order is not representative of what the client sees (not clockwise)
+* On starting a new round, some cards do not get rendered (they render after someone makes a move)
+* The host can make calls before the game starts (need to disable the button before the game starts)
