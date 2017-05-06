@@ -45,6 +45,7 @@ const init = ( app, server ) => {
           }          
         })
         .then(() => {
+          return messages.delete(info.gameid)
           return games.deleteGame(info.gameid)
         })
         .then(() => {
@@ -104,8 +105,30 @@ const init = ( app, server ) => {
         .then(data1 => {
           return Promise.all(data1.map(playerPromise))
         })
-        .then(users => {
-          state.players = users;
+        .then(data2 => {
+          state.players = data2;
+          return gamecards.findCardsInPlay(state.gameid)
+        })
+        .then(data3 => {
+          var done = false;
+          for(var i=0; i<state.players.length; i++) {
+            state.players[i].numberOfCards = 0;
+            for(var j=0; j<data3.length; j++) {
+              if(state.players[i].userid == data3[j].userid) {
+                state.players[i].numberOfCards++;
+                if(i == state.players.length-1 && j == data3.length-1)
+                  done = true;
+              }
+              
+            }
+          }
+          if(done){
+            return new Promise(function(resolve, reject) {
+              resolve(true)
+            })
+          }
+        })
+        .then(() => {
           socket.emit('update-players', state)
         })
         .catch(err => {
@@ -120,7 +143,6 @@ const init = ( app, server ) => {
         })
         .then(data2 => {
           state.turn = data2.username;
-          state.turnId = data2.userid;
           socket.emit('update-turn', state);
         })
         .catch(err => {
@@ -171,6 +193,9 @@ const init = ( app, server ) => {
     socket.on('draw-cards', function(info) {
       gamecards.drawHandAndAdd(info.userid, info.gameid, info.numberOfCards)
         .then(cards => {
+          for(var i=0; i<cards.length; i++) {
+            console.log('user ' + info.username + ' drew ' + cards[i].cardid)
+          }
           socket.emit('draw-cards', cards);
         })
         .catch(err => {
@@ -180,17 +205,28 @@ const init = ( app, server ) => {
 
     socket.on('call-hand', function(info, state, callQuantity, callRank) {
       state.lastHandCalled = '' + callQuantity + " " + callRank;
+      state.lastHandCalledPlayer = info.username;
       hands.findByDescription(callQuantity + " " + callRank)
         .then(data => {
           if(data.handid <= state.lastHandCalledId) {
             socket.emit('call-hand-too-low')
             return new Promise(function(resolve, rejected) {
-              resolve(true)
+              rejected('call-hand-too-low event')
             })
           } else {
             state.lastHandCalledId = data.handid;
             return games.updateLastHandCalled(data.handid, state.gameid)
           }
+        })
+        .then(() => {
+          var currentTurnIndex = 0;
+          for(var i=0; i<state.players.length; i++) {
+            if(state.players[i].username == info.username)
+              currentTurnIndex = i;
+          }
+          var next = (currentTurnIndex + 1) % state.players.length
+          state.turn = state.players[next].username
+          return games.updateTurn(state.players[next].userid, state.gameid)
         })
         .then(() => {
           io.to(state.gameid).emit('next-players-turn', info, state)
@@ -206,25 +242,97 @@ const init = ( app, server ) => {
           return doesHandExist(cards, state.lastHandCalledId)
         })
         .then(exists => {
-          console.log('exists ' + exists)
-          if(exists)
-            console.log('player who bsed loses a card')
-          else
-            console.log('player who got bsed loses a card')
-          return gamecards.reset(state.gameid)
+          state.bsState = exists;
+          var done = false;
+          if(exists) {
+            for(var i=0; i<state.players.length; i++) {
+              if(state.players[i].username == info.username) {
+                state.players[i].numberOfCards--;
+                if(state.players[i].numberOfCards == 0) {
+                  state.players = state.players.splice(i, 1);
+                  state.playersOut++;
+                }
+                done = true;
+              }
+            }
+          } else {
+            for(var i=0; i<state.players.length; i++) {
+              if(state.players[i].username == state.lastHandCalledPlayer) {
+                state.players[i].numberOfCards--;
+                if(state.players[i].numberOfCards == 0) {
+                  state.players = state.players.splice(i, 1);
+                  state.playersOut++;
+                }
+                done = true;
+              }
+            }
+          }
+          if(done)
+            return games.updateLastHandCalled(1, state.gameid)
         })
         .then(() => {
-          games.updateLastHandCalled(1, state.gameid)
-          io.to(state.gameid).emit('new-round', info, state)
+          io.to(state.gameid).emit('get-all-cards')
+          if(state.numberOfPlayers - state.playersOut == 1)
+            io.to(state.gameid).emit('win-message', info, state)
+          else
+            io.to(state.gameid).emit('ready-up', info, state)
         })
         .catch(err => {
           console.log(err)
         })
     })
 
+    socket.on('get-all-cards', function(info, cards, state) {
+      gamecards.findCardsInPlay(state.gameid)
+        .then(data => {
+          var done = false;
+          for(var i=0; i<state.players.length; i++) {
+            state.players[i].gameCards = [];
+            for(var j=0; j<data.length; j++) {
+              if(state.players[i].userid == data[j].userid) {
+                state.players[i].gameCards.push(data[j].cardid);
+                if(i == state.players.length-1 && j == data.length-1){
+                  done = true;
+                }
+              }
+            }
+          }
+          if(done){
+            return new Promise(function(resolve, reject) {
+              resolve(true)
+            })
+          }
+        })
+        .then(() => {
+          io.to(state.gameid).emit('render-all-cards', state)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on('ready', function(state) {
+      state.readyCount++;
+      if(state.readyCount >= state.numberOfPlayers) {
+        gamecards.reset(state.gameid)
+          .then(() => {
+            io.to(state.gameid).emit('new-round', state)
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      } else {
+        io.to(state.gameid).emit('update-ready-count', state)
+      }
+    })
+
   });
 
 };
+
+function playerCardsPromise(gameid, player) {
+  return gamecards.findCardsByUserId(gameid, player.userid)
+}
 
 function playerPromise(player) {
   return users.findById(player.userid)
@@ -291,25 +399,24 @@ function doesHandExist(cards, handid) {
         }
         if(data[i].wild)
           wilds++;
-
       }
       return new Promise(function(resolve, reject) {
         resolve(true)
       })
     })
     .then(() => {
-      console.log('4s ' + fours)
-      console.log('5s ' + fives)
-      console.log('6s ' + sixes)
-      console.log('7s ' + sevens)
-      console.log('8s ' + eights)
-      console.log('9s ' + nines)
-      console.log('10s ' + tens)
-      console.log('Js ' + jacks)
-      console.log('Qs ' + queens)
-      console.log('Ks ' + kings)
-      console.log('As ' + aces)
-      console.log('Ws ' + wilds)
+      console.log('four ' + fours)
+      console.log('five ' + fives)
+      console.log('six ' + sixes)
+      console.log('seven ' + sevens)
+      console.log('eight ' + eights)
+      console.log('nine ' + nines)
+      console.log('tens ' + tens)
+      console.log('jacks ' + jacks)
+      console.log('queens ' + queens)
+      console.log('kings ' + kings)
+      console.log('aces ' + aces)
+      console.log('wilds ' + wilds)
       switch(handid) {
         case 1: //''
           console.log('error bsing blank')
@@ -364,39 +471,39 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 14: //two 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 2)
             exists = true;
           break;
         case 15: //two 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 2)
             exists = true;
           break;
         case 16: //two 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 2)
             exists = true;
           break;
         case 17: //two 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 2)
             exists = true;
           break;
         case 18: //two 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 2)
             exists = true;
           break;
         case 19: //two 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 2)
             exists = true;
           break;
         case 20: //two J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 2)
             exists = true;
           break;
         case 21: //two Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 2)
             exists = true;
           break;
         case 22: //two K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 2)
             exists = true
           break;
         case 23: //two A
@@ -404,43 +511,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 24: //three 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 3)
             exists = true;
           break;
         case 25: //three 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 3)
             exists = true;
           break;
         case 26: //three 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 3)
             exists = true;
           break;
         case 27: //three 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 3)
             exists = true;
           break;
         case 28: //three 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 3)
             exists = true;
           break;
         case 29: //three 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 3)
             exists = true;
           break;
         case 30: //three 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 3)
             exists = true;
           break;
         case 31: //three J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 3)
             exists = true;
           break;
         case 32: //three Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 3)
             exists = true;
           break;
         case 33: //three K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 3)
             exists = true
           break;
         case 34: //three A
@@ -480,43 +587,43 @@ function doesHandExist(cards, handid) {
         case 50: //full house A
           break;
         case 51: //four 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 4)
             exists = true;
           break;
         case 52: //four 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 4)
             exists = true;
           break;
         case 53: //four 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 4)
             exists = true;
           break;
         case 54: //four 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 4)
             exists = true;
           break;
         case 55: //four 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 4)
             exists = true;
           break;
         case 56: //four 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 4)
             exists = true;
           break;
         case 57: //four 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 4)
             exists = true;
           break;
         case 58: //four J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 4)
             exists = true;
           break;
         case 59: //four Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 4)
             exists = true;
           break;
         case 60: //four K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 4)
             exists = true
           break;
         case 61: //four A
@@ -526,43 +633,43 @@ function doesHandExist(cards, handid) {
         case 62: //straight flush
           break;
         case 63: //five 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 5)
             exists = true;
           break;
         case 64: //five 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 5)
             exists = true;
           break;
         case 65: //five 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 5)
             exists = true;
           break;
         case 66: //five 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 5)
             exists = true;
           break;
         case 67: //five 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 5)
             exists = true;
           break;
         case 68: //five 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 5)
             exists = true;
           break;
         case 69: //five 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 5)
             exists = true;
           break;
         case 70: //five J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 5)
             exists = true;
           break;
         case 71: //five Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 5)
             exists = true;
           break;
         case 72: //five K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 5)
             exists = true
           break;
         case 73: //five A
@@ -570,43 +677,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 74: //six 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 6)
             exists = true;
           break;
         case 75: //six 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 6)
             exists = true;
           break;
         case 76: //six 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 6)
             exists = true;
           break;
         case 77: //six 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 6)
             exists = true;
           break;
         case 78: //six 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 6)
             exists = true;
           break;
         case 79: //six 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 6)
             exists = true;
           break;
         case 80: //six 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 6)
             exists = true;
           break;
         case 81: //six J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 6)
             exists = true;
           break;
         case 82: //six Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 6)
             exists = true;
           break;
         case 83: //six K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 6)
             exists = true
           break;
         case 84: //six A
@@ -614,43 +721,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 85: //seven 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 7)
             exists = true;
           break;
         case 86: //seven 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 7)
             exists = true;
           break;
         case 87: //seven 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 7)
             exists = true;
           break;
         case 88: //seven 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 7)
             exists = true;
           break;
         case 89: //seven 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 7)
             exists = true;
           break;
         case 90: //seven 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 7)
             exists = true;
           break;
         case 91: //seven 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 7)
             exists = true;
           break;
         case 92: //seven J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 7)
             exists = true;
           break;
         case 93: //seven Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 7)
             exists = true;
           break;
         case 94: //seven K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 7)
             exists = true
           break;
         case 95: //seven A
@@ -658,43 +765,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 96: //eight 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 8)
             exists = true;
           break;
         case 97: //eight 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 8)
             exists = true;
           break;
         case 98: //eight 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 8)
             exists = true;
           break;
         case 99: //eight 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 8)
             exists = true;
           break;
         case 100: //eight 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 8)
             exists = true;
           break;
         case 101: //eight 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 8)
             exists = true;
           break;
         case 102: //eight 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 8)
             exists = true;
           break;
         case 103: //eight J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 8)
             exists = true;
           break;
         case 104: //eight Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 8)
             exists = true;
           break;
         case 105: //eight K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 8)
             exists = true
           break;
         case 106: //eight A
@@ -702,43 +809,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 107: //nine 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 9)
             exists = true;
           break;
         case 108: //nine 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 9)
             exists = true;
           break;
         case 109: //nine 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 9)
             exists = true;
           break;
         case 110: //nine 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 9)
             exists = true;
           break;
         case 111: //nine 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 9)
             exists = true;
           break;
         case 112: //nine 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 9)
             exists = true;
           break;
         case 113: //nine 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 9)
             exists = true;
           break;
         case 114: //nine J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 9)
             exists = true;
           break;
         case 115: //nine Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 9)
             exists = true;
           break;
         case 116: //nine K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 9)
             exists = true
           break;
         case 117: //nine A
@@ -746,43 +853,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 118: //ten 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 10)
             exists = true;
           break;
         case 119: //ten 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 10)
             exists = true;
           break;
         case 120: //ten 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 10)
             exists = true;
           break;
         case 121: //ten 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 10)
             exists = true;
           break;
         case 122: //ten 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 10)
             exists = true;
           break;
         case 123: //ten 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 10)
             exists = true;
           break;
         case 124: //ten 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 10)
             exists = true;
           break;
         case 125: //ten J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 10)
             exists = true;
           break;
         case 126: //ten Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 10)
             exists = true;
           break;
         case 127: //ten K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 10)
             exists = true
           break;
         case 128: //ten A
@@ -790,43 +897,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 129: //eleven 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 11)
             exists = true;
           break;
         case 130: //eleven 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 11)
             exists = true;
           break;
         case 131: //eleven 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 11)
             exists = true;
           break;
         case 132: //eleven 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 11)
             exists = true;
           break;
         case 133: //eleven 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 11)
             exists = true;
           break;
         case 134: //eleven 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 11)
             exists = true;
           break;
         case 135: //eleven 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 11)
             exists = true;
           break;
         case 136: //eleven J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 11)
             exists = true;
           break;
         case 137: //eleven Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 11)
             exists = true;
           break;
         case 138: //eleven K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 11)
             exists = true
           break;
         case 139: //eleven A
@@ -834,43 +941,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 140: //twelve 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 12)
             exists = true;
           break;
         case 141: //twelve 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 12)
             exists = true;
           break;
         case 142: //twelve 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 12)
             exists = true;
           break;
         case 143: //twelve 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 12)
             exists = true;
           break;
         case 144: //twelve 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 12)
             exists = true;
           break;
         case 145: //twelve 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 12)
             exists = true;
           break;
         case 146: //twelve 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 12)
             exists = true;
           break;
         case 147: //twelve J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 12)
             exists = true;
           break;
         case 148: //twelve Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 12)
             exists = true;
           break;
         case 149: //twelve K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 12)
             exists = true
           break;
         case 150: //twelve A
@@ -878,43 +985,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 151: //thirteen 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 13)
             exists = true;
           break;
         case 152: //thirteen 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 13)
             exists = true;
           break;
         case 153: //thirteen 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 13)
             exists = true;
           break;
         case 154: //thirteen 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 13)
             exists = true;
           break;
         case 155: //thirteen 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 13)
             exists = true;
           break;
         case 156: //thirteen 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 13)
             exists = true;
           break;
         case 157: //thirteen 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 13)
             exists = true;
           break;
         case 158: //thirteen J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 13)
             exists = true;
           break;
         case 159: //thirteen Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 13)
             exists = true;
           break;
         case 160: //thirteen K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 13)
             exists = true
           break;
         case 161: //thirteen A
@@ -922,43 +1029,43 @@ function doesHandExist(cards, handid) {
             exists = true;
           break;
         case 162: //fourteen 4
-          if ((fours + wilds) >= 1)
+          if ((fours + wilds) >= 14)
             exists = true;
           break;
         case 163: //fourteen 5
-          if ((fives + wilds) >= 1)
+          if ((fives + wilds) >= 14)
             exists = true;
           break;
         case 164: //fourteen 6
-          if ((sixes + wilds) >= 1)
+          if ((sixes + wilds) >= 14)
             exists = true;
           break;
         case 165: //fourteen 7
-          if ((sevens + wilds) >= 1)
+          if ((sevens + wilds) >= 14)
             exists = true;
           break;
         case 166: //fourteen 8
-          if ((eights + wilds) >= 1)
+          if ((eights + wilds) >= 14)
             exists = true;
           break;
         case 167: //fourteen 9
-          if ((nines + wilds) >= 1)
+          if ((nines + wilds) >= 14)
             exists = true;
           break;
         case 168: //fourteen 10
-          if ((tens + wilds) >= 1)
+          if ((tens + wilds) >= 14)
             exists = true;
           break;
         case 169: //fourteen J
-          if ((jacks + wilds) >= 1)
+          if ((jacks + wilds) >= 14)
             exists = true;
           break;
         case 170: //fourteen Q
-          if ((queens + wilds) >= 1)
+          if ((queens + wilds) >= 14)
             exists = true;
           break;
         case 171: //fourteen K
-          if (kings + wilds >= 1)
+          if (kings + wilds >= 14)
             exists = true
           break;
         case 172: //fourteen A

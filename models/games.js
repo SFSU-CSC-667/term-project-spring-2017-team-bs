@@ -7,6 +7,7 @@ const DELETE_GAME = 'DELETE FROM games WHERE gameid=$1'
 const FIND_BY_ID = 'SELECT * FROM games WHERE gameid=$1'
 const FIND_BY_NAME = 'SELECT * FROM games WHERE room_name=$1'
 const UPDATE_LAST_HAND_CALLED = 'UPDATE games SET last_hand_called=$1 WHERE gameid=$2'
+const UPDATE_TURN = 'UPDATE games SET players_turn=$1 WHERE gameid=$2'
 
 module.exports = {
   allOpen: function() {
@@ -35,6 +36,10 @@ module.exports = {
 
   updateLastHandCalled: function(handid, gameid) {
     return db.none( UPDATE_LAST_HAND_CALLED, [handid, gameid] )
+  },
+
+  updateTurn: function(userid, gameid) {
+    return db.none( UPDATE_TURN, [userid, gameid] )
   }
   
 }

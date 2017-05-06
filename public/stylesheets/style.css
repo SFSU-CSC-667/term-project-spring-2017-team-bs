@@ -24,6 +24,10 @@ ul#messages li {
   padding: 5px 10px;
 }
 
+ul#messages li.system {
+  color: rgb(0, 97, 255);
+}
+
 ul#messages li:nth-child(odd) {
   background: #eee;
 }
