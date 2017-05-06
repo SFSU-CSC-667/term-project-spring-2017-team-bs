@@ -1,10 +1,12 @@
 const pgp = require('pg-promise')();
 
-const connection = {
+const localConnection = {
 	database: 'bspoker',
 	user: 'postgres',
 	password: 'bspoker'
 };
+
+const connection = process.env.DATABASE_URL || localConnection;
 
 const db = pgp(connection);
 
