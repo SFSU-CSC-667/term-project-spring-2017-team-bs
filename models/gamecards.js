@@ -8,7 +8,8 @@ const DELETE_GAME = 'DELETE FROM game_cards WHERE gameid=$1'
 const DELETE_USER = 'DELETE FROM game_cards WHERE userid=$1 AND gameid=$2 RETURNING *'
 
 const DRAW_HAND_AND_ADD = `UPDATE game_cards SET userid=$1 WHERE gameid=$2 AND cardid IN
-(SELECT cardid FROM game_cards WHERE gameid=$2 AND userid IS NULL ORDER BY random() LIMIT $3) RETURNING *`
+(SELECT cardid FROM game_cards WHERE gameid=$2 AND userid IS NULL AND cardid IS NOT NULL
+ORDER BY random() LIMIT $3) RETURNING *`
 
 const FIND_CARDS_BY_USERID = 'SELECT * FROM game_cards WHERE gameid=$1 AND userid=$2 AND cardid IS NOT NULL'
 const FIND_CARDS_IN_PLAY = 'SELECT * FROM game_cards WHERE gameid=$1 AND userid IS NOT NULL AND cardid IS NOT NULL'

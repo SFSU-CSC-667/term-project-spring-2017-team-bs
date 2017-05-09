@@ -36,6 +36,7 @@ $(function () {
   $('#start').hide();
   $('#bs').hide();
   $('#ready').hide();
+  $('#draw').hide();
   $('#start').prop('disabled', true);
   $('#bs').prop('disabled', true);
   $('#call').prop('disabled', true);
@@ -50,6 +51,7 @@ $(function () {
     
     $('#start').click(function() {
       if($('#start').prop('disabled')) {
+        alert('Only the host can start the game!')
         return false;
       } else {
         socket.emit('start', myInfo);
@@ -96,17 +98,26 @@ $(function () {
       socket.emit('ready', gameState)
     })
 
+    $('#draw').click(function() {
+      $('#draw').hide();
+      $('#bs').show();
+      socket.emit('draw-cards', myInfo);
+    })
+
     socket.on('message-send', function(data) {
       $('#messages').append($('<li>').text(data.username + ": " + data.message));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
     })
 
     socket.on('user-joined', function(data) {
       $('#messages').append($('<li class="system">').text(data.username + " has joined!"));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
       updateGameState(gameState);
     })
 
     socket.on('user-left', function(data) {
       $('#messages').append($('<li class="system">').text(data.username + " has left!"));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
       updateGameState(gameState);
     })
 
@@ -114,12 +125,9 @@ $(function () {
       gameState.status = state.status;
       if(gameState.status == 'open') {
         $('#start').show();
-        $('#bs').hide();
       } else {
         $('#start').hide();
-        $('#bs').show();
       }
-      console.log('gameState.status: ' + gameState.status);
     })
 
     socket.on('update-number-of-players', function(state) {
@@ -129,14 +137,11 @@ $(function () {
         $('#start').prop('disabled', false)
       else 
         $('#start').prop('disabled', true)
-      
-      console.log('gameState.numberOfPlayers: ' + gameState.numberOfPlayers);
     })
 
     socket.on('update-cards-in-deck', function(state) {
       gameState.cardsInDeck = state.cardsInDeck;
       $('#deck').text(gameState.cardsInDeck);
-      console.log('gameState.cardsInDeck: ' + gameState.cardsInDeck);
     })
 
     socket.on('update-players', function(state) {
@@ -171,8 +176,6 @@ $(function () {
           $('#playerfour').text(myPlayers[3]);
           break;
       }
-      for(var i=0; i<gameState.players.length; i++)
-        console.log('gameState.players[' + i + '].username: ' + gameState.players[i].username)
 
       var indexOfPlayer, playerNumber;
       for(var i=0; i<gameState.players.length; i++) {
@@ -208,7 +211,13 @@ $(function () {
       gameState.turn = state.turn;
       $('#turn').text('Player\'s Turn: ' + gameState.turn);
 
-      if (gameState.turn == myInfo.username) {
+      console.log('gameState.numberOfPlayers: ' + gameState.numberOfPlayers)
+      if (gameState.turn == myInfo.username && gameState.status == 'open') {
+        $('#bs').prop('disabled', true);
+        $('#call').prop('disabled', true);
+        $('#callQuantity').prop('disabled', true);
+        $('#callRank').prop('disabled', true);
+      } else if (gameState.turn == myInfo.username && gameState.status == 'in-progress') {
         $('#bs').prop('disabled', false);
         $('#call').prop('disabled', false);
         $('#callQuantity').prop('disabled', false);
@@ -220,7 +229,6 @@ $(function () {
         $('#callQuantity').prop('disabled', true);
         $('#callRank').prop('disabled', true);
       }
-      console.log('gameState.turn: ' + gameState.turn);
     })
 
     socket.on('update-last-hand-called', function(state) {
@@ -232,7 +240,6 @@ $(function () {
       } else {
         $('#lastHand').text(gameState.lastHandCalled);
       }
-      console.log('gameState.lastHandCalled: ' + gameState.lastHandCalled);
     })
 
     socket.on('update-cards', function(info, cards) {
@@ -243,9 +250,8 @@ $(function () {
       }
       gamecards = cards;
       if(gamecards.length > 0) {
-        emptyHand();
+        emptyHand('one');
         for(var i=0; i<myInfo.numberOfCards; i++) {
-          console.log('gamecards[ ' + i + ' ].cardid: ' + gamecards[i].cardid)
           renderCard('one', gamecards[i].cardid);
         }
       }
@@ -253,16 +259,15 @@ $(function () {
 
     socket.on('start', function(data) {
       $('#start').hide();
-      $('#bs').show();
+      $('#draw').show();
       emptyHand('one');
-      socket.emit('draw-cards', myInfo);
+      $('#messages').append($('<li class="system">').text('The game has started!'));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
     })
 
     socket.on('draw-cards', function(cards) {
       gamecards = cards;
-      console.log('number of cards: ' + myInfo.numberOfCards)
       for(var i=0; i<myInfo.numberOfCards; i++) {
-        console.log('gamecards[' + i + '].cardid: ' + gamecards[i].cardid)
         renderCard('one', gamecards[i].cardid);
       }
       updateGameState(gameState);
@@ -272,6 +277,7 @@ $(function () {
       gameState.lastHandCalledPlayer = state.lastHandCalledPlayer;
       gameState.turn = state.turn;
       $('#messages').append($('<li class="system">').text(info.username + " has called " + state.lastHandCalled));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
       updateGameState(gameState);
     })
 
@@ -281,15 +287,18 @@ $(function () {
 
     socket.on('ready-up', function(info, state) {
       gameState.players = state.players;
-      $('#messages').append($('<li class="system">').text(info.username + " has called BS on " + state.lastHandCalledPlayer));
+      $('#messages').append($('<li class="system">').text(info.username + " BSed " + state.lastHandCalledPlayer));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
       if(state.bsState == true) {
         if(info.username == myInfo.username)
           myInfo.numberOfCards--;
         $('#messages').append($('<li class="system">').text(info.username + " loses a card!"));
+        $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
       } else {
         if(state.lastHandCalledPlayer == myInfo.username)
           myInfo.numberOfCards--;
         $('#messages').append($('<li class="system">').text(state.lastHandCalledPlayer + " loses a card!"));
+        $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
       }
       $('#bs').hide();
       $('#ready').show()
@@ -304,7 +313,7 @@ $(function () {
       gameState.lastHandCalledPlayer = null;
       $('#ready').hide();
       $('#ready').prop('disabled', false);
-      socket.emit('draw-cards', myInfo);
+      $('#draw').show();
     })
 
     socket.on('get-all-cards', function() {
@@ -349,9 +358,22 @@ $(function () {
 
     socket.on('win-message', function(info, state) {
       for(var i=0; i<state.players.length; i++) {
-        if(state.players[i].numberOfCards > 0)
+        if(state.players[i].numberOfCards > 0) {
           $('#messages').append($('<li class="system">').text(state.players[i].username + " wins!"));
+          $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
+        }
       }
+      $('#bs').prop('disabled', true);
+      $('#callQuantity').prop('disabled', true);
+      $('#callRank').prop('disabled', true);
+      $('#call').prop('disabled', true);
+    })
+
+    socket.on('update-player-cards', function() {
+      socket.emit('update-players', gameState)
+      socket.emit('update-turn', gameState)
+      socket.emit('update-cards-in-deck', gameState)
+      socket.emit('update-last-hand-called', gameState)
     })
 
   })

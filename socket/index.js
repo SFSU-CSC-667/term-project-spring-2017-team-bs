@@ -197,6 +197,7 @@ const init = ( app, server ) => {
             console.log('user ' + info.username + ' drew ' + cards[i].cardid)
           }
           socket.emit('draw-cards', cards);
+          io.to(info.gameid).emit('update-player-cards');
         })
         .catch(err => {
           console.log(err)
@@ -244,13 +245,17 @@ const init = ( app, server ) => {
         .then(exists => {
           state.bsState = exists;
           var done = false;
+          var out = false;
+          var playerIdWhoLostCard;
           if(exists) {
             for(var i=0; i<state.players.length; i++) {
               if(state.players[i].username == info.username) {
                 state.players[i].numberOfCards--;
+                playerIdWhoLostCard = state.players[i].userid;
                 if(state.players[i].numberOfCards == 0) {
-                  state.players = state.players.splice(i, 1);
+                  state.players.splice(i, 1);
                   state.playersOut++;
+                  out = true;
                 }
                 done = true;
               }
@@ -259,23 +264,43 @@ const init = ( app, server ) => {
             for(var i=0; i<state.players.length; i++) {
               if(state.players[i].username == state.lastHandCalledPlayer) {
                 state.players[i].numberOfCards--;
+                playerIdWhoLostCard = state.players[i].userid;
                 if(state.players[i].numberOfCards == 0) {
-                  state.players = state.players.splice(i, 1);
+                  state.players.splice(i, 1);
                   state.playersOut++;
+                  out = true;
                 }
                 done = true;
               }
             }
           }
-          if(done)
-            return games.updateLastHandCalled(1, state.gameid)
+          if(done) {
+            if(out) {
+              var currentTurnIndex = 0;
+              for(var i=0; i<state.players.length; i++) {
+                if(state.players[i].username == info.username)
+                  currentTurnIndex = i;
+              }
+              var next = (currentTurnIndex + 1) % state.players.length
+              state.turn = state.players[next].username
+              return games.updateTurn(state.players[next].userid, state.gameid)
+            } else {
+              state.turn = playerIdWhoLostCard;
+              return games.updateTurn(playerIdWhoLostCard, state.gameid)
+            }
+          }
         })
         .then(() => {
+          return games.updateLastHandCalled(1, state.gameid)
+        })
+        .then(() => {
+          console.log('bs get all cards')
           io.to(state.gameid).emit('get-all-cards')
-          if(state.numberOfPlayers - state.playersOut == 1)
+          if(state.numberOfPlayers - state.playersOut == 1) {
             io.to(state.gameid).emit('win-message', info, state)
-          else
+          } else {
             io.to(state.gameid).emit('ready-up', info, state)
+          }
         })
         .catch(err => {
           console.log(err)
