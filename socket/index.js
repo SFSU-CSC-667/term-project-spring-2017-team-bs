@@ -20,23 +20,34 @@ const init = ( app, server ) => {
       console.log( 'A client disconnected from a game' );
       var info = {};
       info.username = socket.username;
-      gamecards.deleteUser(socket.userid, socket.gameid)
+
+      games.findById(socket.gameid)
         .then(data => {
+          if(data.players_turn == socket.userid) {
+            socket.to(socket.gameid).emit('user-left-ready-up', info)
+          }
+          return gamecards.deleteUser(socket.userid, socket.gameid)
+        })
+        .then(() => {
           return gamecards.findDistinctUsers(socket.gameid)
         })
         .then(data1 => {
           if(data1.length <= 0) {
-            console.log('deleted game ' + socket.gameid)
             return gamecards.deleteGame(socket.gameid)
           } else {
             socket.to(socket.gameid).emit('user-left', info);
-            return new Promise(function(resolve, reject) {
-              reject('');
-            })
+            return games.updateTurn(data1[0].userid, socket.gameid)
           }
         })
-        .then(() => {
-          return messages.delete(socket.gameid)
+        .then(data2 => {
+          //if games.updateTurn is returned, skip deleting game/messages
+          if(data2) {
+            return new Promise(function(resolve, reject) {
+              reject('')
+            })
+          }
+          else
+            return messages.delete(socket.gameid)
         })
         .then(() => {
           return games.deleteGame(socket.gameid)
@@ -106,7 +117,6 @@ const init = ( app, server ) => {
           return games.updateLastHandCalled(1, state.gameid)
         })
         .then(() => {
-          console.log('bs get all cards')
           io.to(state.gameid).emit('get-all-cards')
           if(state.numberOfPlayers - state.playersOut == 1) {
             io.to(state.gameid).emit('win-message', info, state)
@@ -155,9 +165,6 @@ const init = ( app, server ) => {
     socket.on( 'draw-cards', function(info) {
       gamecards.drawHandAndAdd(info.userid, info.gameid, info.numberOfCards)
         .then(cards => {
-          for(var i=0; i<cards.length; i++) {
-            console.log('user ' + info.username + ' drew ' + cards[i].cardid)
-          }
           socket.emit('draw-cards', cards);
           io.to(info.gameid).emit('update-player-cards');
         })
@@ -356,22 +363,26 @@ const init = ( app, server ) => {
 
     socket.on( 'user-left', function(info) {
       gamecards.deleteUser(info.userid, info.gameid)
-        .then(data => {
+        .then(() => {
           return gamecards.findDistinctUsers(info.gameid)
         })
         .then(data1 => {
           if(data1.length <= 0) {
-            console.log('deleted game ' + info.gameid)
             return gamecards.deleteGame(info.gameid)
           } else {
             socket.to(info.gameid).emit('user-left', info);
-            return new Promise(function(resolve, reject) {
-              reject('');
-            })
+            return games.updateTurn(data1[0].userid, info.gameid)
           }
         })
-        .then(() => {
-          return messages.delete(info.gameid)
+        .then(data2 => {
+          //if games.updateTurn is returned, skip deleting game/messages
+          if(data2) {
+            return new Promise(function(resolve, reject) {
+              reject('')
+            })
+          } else {
+            return messages.delete(info.gameid)
+          }
         })
         .then(() => {
           return games.deleteGame(info.gameid)
@@ -382,6 +393,10 @@ const init = ( app, server ) => {
         .catch(err => {
           console.log(err)
         })
+    })
+
+    socket.on( 'win-message', function(info, state) {
+      socket.emit('win-message', info, state)
     })
 
   });

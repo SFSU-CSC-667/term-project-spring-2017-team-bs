@@ -1,7 +1,7 @@
 # term-project-spring-2017-team-bs
 
 ## BS Poker Game
-[http://bspoker.herokuapp.com](http://bspoker.herokuapp.com)
+[https://bspoker.herokuapp.com](https://bspoker.herokuapp.com)
 
 ### Local DB Setup:
 1. Install postgres
@@ -20,3 +20,4 @@
 ### Things to fix:
 * Turn order is not representative of what the client sees (not clockwise)
 * The host can make calls before everyone draws their cards
+* Player turn timer

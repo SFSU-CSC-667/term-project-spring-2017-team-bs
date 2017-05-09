@@ -37,7 +37,7 @@ module.exports = {
   },
 
   deleteGame: function(gameid) {
-    return db.any( DELETE_GAME, gameid )
+    return db.none( DELETE_GAME, gameid )
   },
 
   deleteUser: function(userid, gameid) {

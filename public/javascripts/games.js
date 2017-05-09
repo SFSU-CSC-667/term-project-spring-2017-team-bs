@@ -55,7 +55,6 @@ $(function () {
     })
 
     $('#leaveModalLeave').click(function() {
-      socket.emit('user-left', myInfo);
       window.location = '/';
     })
 
@@ -318,6 +317,10 @@ $(function () {
           }
         }
       }
+
+      if(gameState.status != 'open' && gameState.numberOfPlayers <= 1) {
+        socket.emit('win-message', myInfo, gameState)
+      }
     })
 
     socket.on('update-player-cards', function() {
@@ -373,6 +376,16 @@ $(function () {
       updateGameState(gameState);
     })
 
+    socket.on('user-left-ready-up', function(info) {
+      $('#messages').append($('<li class="system">').text("Starting new round since it was " + info.username + "'s turn"));
+      $('#messages').animate({scrollTop: $('#messages').prop('scrollHeight')}, 1000)
+      $('#bs').hide();
+      $('#ready').show()
+      $('#call').prop('disabled', true)
+      $('#callQuantity').prop('disabled', true)
+      $('#callRank').prop('disabled', true)
+    })
+
     socket.on('win-message', function(info, state) {
       for(var i=0; i<state.players.length; i++) {
         if(state.players[i].numberOfCards > 0) {
@@ -384,6 +397,8 @@ $(function () {
       $('#callQuantity').prop('disabled', true);
       $('#callRank').prop('disabled', true);
       $('#call').prop('disabled', true);
+      $('#draw').prop('disabled', true);
+      $('#ready').prop('disabled', true);
     })
 
   })
