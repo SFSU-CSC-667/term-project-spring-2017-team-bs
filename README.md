@@ -18,6 +18,5 @@
 5. Open a browser and go to `localhost:3000`
 
 ### Things to fix:
-* Closing the tab or browser while in a game will not remove that player from the game (persistence)
 * Turn order is not representative of what the client sees (not clockwise)
 * The host can make calls before everyone draws their cards

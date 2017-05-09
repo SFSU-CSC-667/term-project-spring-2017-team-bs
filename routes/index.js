@@ -135,14 +135,28 @@ router.post('/games/join', function(req, res, next) {
       })
       .then(match => {
         if (match == true)
-          return gamecards.addUser(req.user.userid, req.body.gameid)
+          return gamecards.isUserInGame(req.user.userid, req.body.gameid)
         else {
           req.flash('error', 'Incorrect password')
           res.redirect('/')
+          return new Promise(function(resolve, reject) {
+            reject('')
+          })
         }
       })
       .then(data2 => {
-        res.redirect('/games/' + data2.gameid)
+        if (data2) {
+          req.flash('error', 'You are already in this game')
+          res.redirect('/')
+          return new Promise(function(resolve, reject) {
+            reject('');
+          })
+        } else {
+          return gamecards.addUser(req.user.userid, req.body.gameid)
+        }
+      })
+      .then(data3 => {
+        res.redirect('/games/' + data3.gameid)
       })
       .catch(err => {
         console.log(err)

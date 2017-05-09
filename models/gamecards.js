@@ -20,6 +20,7 @@ const FIND_NUMBER_OF_USERS = `SELECT COUNT(*) AS count FROM
 (SELECT DISTINCT userid FROM game_cards WHERE gameid=$1 AND userid IS NOT NULL) AS temp`
 
 const GET = 'SELECT * FROM game_cards WHERE gameid=$1'
+const IS_USER_IN_GAME = 'SELECT * FROM game_cards WHERE userid=$1 AND gameid=$2'
 const RESET = 'UPDATE game_cards SET userid=NULL WHERE gameid=$1'
 
 module.exports = {
@@ -72,10 +73,14 @@ module.exports = {
   },
 
   get: function(gameid) {
-    return db.any( GET, gameid)
+    return db.any( GET, gameid )
+  },
+
+  isUserInGame: function(userid, gameid) {
+    return db.oneOrNone( IS_USER_IN_GAME, [userid, gameid] )
   },
 
   reset: function(gameid) {
-    return db.none( RESET, gameid)
+    return db.none( RESET, gameid )
   }
 }

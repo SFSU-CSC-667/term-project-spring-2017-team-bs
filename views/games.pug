@@ -96,6 +96,19 @@ block content
                 .input-group-btn
                   button.btn.btn-default#send(type='submit') Send
 
+  .modal.fade(role='dialog')#leaveModal
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type='button' data-dismiss='modal') X
+          h2 Leaving the game?
+        .modal-body
+          p Are you sure you want to leave?
+          p You won't be able to rejoin after leaving
+        .modal-footer
+          button.btn.btn-danger#leaveModalLeave(type='button' data-dismiss='modal') Yes, I want to leave!
+          button.btn.btn-success(type='button' data-dismiss='modal') No, keep playing!
+
 block sockets
   script(src='/socket.io/socket.io.js')
   script(src='/javascripts/games.js')

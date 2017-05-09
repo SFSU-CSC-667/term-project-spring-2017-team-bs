@@ -16,228 +16,40 @@ const init = ( app, server ) => {
   io.on( 'connection', function(socket) {
     console.log( 'A client connected to a game' );
 
-    socket.on( 'disconnect', function(data) {
+    socket.on( 'disconnect', function() {
       console.log( 'A client disconnected from a game' );
-    });
-
-    socket.on('join-room', function(data) {
-      socket.join(data.gameid);
-    });
-
-    socket.on('user-joined', function(info) {
-      io.to(info.gameid).emit('user-joined', info);
-    });
-
-    socket.on('user-left', function(info, state) {
-      state.players.filter(function(username) {
-        return username != info.username;
-      })
-      gamecards.deleteUser(info.userid, info.gameid)
+      var info = {};
+      info.username = socket.username;
+      gamecards.deleteUser(socket.userid, socket.gameid)
         .then(data => {
-          return gamecards.findDistinctUsers(info.gameid)
+          return gamecards.findDistinctUsers(socket.gameid)
         })
         .then(data1 => {
           if(data1.length <= 0) {
-            return gamecards.deleteGame(info.gameid)
+            console.log('deleted game ' + socket.gameid)
+            return gamecards.deleteGame(socket.gameid)
           } else {
-            socket.to(info.gameid).emit('user-left', info);
-            console.log('did not delete a game')
-          }          
-        })
-        .then(() => {
-          return messages.delete(info.gameid)
-          return games.deleteGame(info.gameid)
-        })
-        .then(() => {
-          socket.to(info.gameid).emit('user-left', info);
-          console.log('deleted a game')
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    });
-
-    socket.on('message-send', function(data) {
-      messages.add(data.gameid, data.userid, data.message)
-        .then(() => {
-          io.to(data.gameid).emit('message-send', data);
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    });
-
-    socket.on('update-status', function(state) {
-      games.findById(state.gameid)
-        .then(data => {
-          state.status = data.status;
-          socket.emit('update-status', state);
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('update-number-of-players', function(state) {
-      gamecards.findNumberOfUsers(state.gameid)
-        .then(data => {
-          state.numberOfPlayers = data[0].count
-          socket.emit('update-number-of-players', state)
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('update-cards-in-deck', function(state) {
-      gamecards.findCardsNotInPlay(state.gameid)
-        .then(data => {
-          state.cardsInDeck = data[0].count
-          socket.emit('update-cards-in-deck', state)
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('update-players', function(state) {
-      gamecards.findDistinctUsers(state.gameid)
-        .then(data1 => {
-          return Promise.all(data1.map(playerPromise))
-        })
-        .then(data2 => {
-          state.players = data2;
-          return gamecards.findCardsInPlay(state.gameid)
-        })
-        .then(data3 => {
-          var done = false;
-          for(var i=0; i<state.players.length; i++) {
-            state.players[i].numberOfCards = 0;
-            for(var j=0; j<data3.length; j++) {
-              if(state.players[i].userid == data3[j].userid) {
-                state.players[i].numberOfCards++;
-                if(i == state.players.length-1 && j == data3.length-1)
-                  done = true;
-              }
-              
-            }
-          }
-          if(done){
+            socket.to(socket.gameid).emit('user-left', info);
             return new Promise(function(resolve, reject) {
-              resolve(true)
+              reject('');
             })
           }
         })
         .then(() => {
-          socket.emit('update-players', state)
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('update-turn', function(state) {
-      games.findById(state.gameid)
-        .then(data1 => {
-          return users.findById(data1.players_turn)
-        })
-        .then(data2 => {
-          state.turn = data2.username;
-          socket.emit('update-turn', state);
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('update-last-hand-called', function(state) {
-      games.findById(state.gameid)
-        .then(data1 => {
-          state.lastHandCalledId = data1.last_hand_called;
-          return hands.findById(data1.last_hand_called)
-        })
-        .then(data2 => {
-          state.lastHandCalled = data2.description;
-          socket.emit('update-last-hand-called', state);
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('update-cards', function(info, cards) {
-      gamecards.findNumberOfCardsByUserId(info.gameid, info.userid)
-        .then(data1 => {
-          info.numberOfCards = data1[0].count;
-          return gamecards.findCardsByUserId(info.gameid, info.userid)
-        })
-        .then(data2 => {
-          cards = data2;
-          socket.emit('update-cards', info, cards);
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('start', function(state) {
-      games.changeStatus('in-progress', state.gameid)
-        .then(() => {
-          io.to(state.gameid).emit('start', state);
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('draw-cards', function(info) {
-      gamecards.drawHandAndAdd(info.userid, info.gameid, info.numberOfCards)
-        .then(cards => {
-          for(var i=0; i<cards.length; i++) {
-            console.log('user ' + info.username + ' drew ' + cards[i].cardid)
-          }
-          socket.emit('draw-cards', cards);
-          io.to(info.gameid).emit('update-player-cards');
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    })
-
-    socket.on('call-hand', function(info, state, callQuantity, callRank) {
-      state.lastHandCalled = '' + callQuantity + " " + callRank;
-      state.lastHandCalledPlayer = info.username;
-      hands.findByDescription(callQuantity + " " + callRank)
-        .then(data => {
-          if(data.handid <= state.lastHandCalledId) {
-            socket.emit('call-hand-too-low')
-            return new Promise(function(resolve, rejected) {
-              rejected('call-hand-too-low event')
-            })
-          } else {
-            state.lastHandCalledId = data.handid;
-            return games.updateLastHandCalled(data.handid, state.gameid)
-          }
+          return messages.delete(socket.gameid)
         })
         .then(() => {
-          var currentTurnIndex = 0;
-          for(var i=0; i<state.players.length; i++) {
-            if(state.players[i].username == info.username)
-              currentTurnIndex = i;
-          }
-          var next = (currentTurnIndex + 1) % state.players.length
-          state.turn = state.players[next].username
-          return games.updateTurn(state.players[next].userid, state.gameid)
+          return games.deleteGame(socket.gameid)
         })
         .then(() => {
-          io.to(state.gameid).emit('next-players-turn', info, state)
+          socket.to(socket.gameid).emit('user-left', info);
         })
         .catch(err => {
           console.log(err)
         })
     })
 
-    socket.on('call-bs', function(info, state) {
+    socket.on( 'call-bs', function(info, state) {
       gamecards.findCardsInPlay(state.gameid)
         .then(cards => {
           return doesHandExist(cards, state.lastHandCalledId)
@@ -307,7 +119,54 @@ const init = ( app, server ) => {
         })
     })
 
-    socket.on('get-all-cards', function(info, cards, state) {
+    socket.on( 'call-hand', function(info, state, callQuantity, callRank) {
+      state.lastHandCalled = '' + callQuantity + " " + callRank;
+      state.lastHandCalledPlayer = info.username;
+      hands.findByDescription(callQuantity + " " + callRank)
+        .then(data => {
+          if(data.handid <= state.lastHandCalledId) {
+            socket.emit('call-hand-too-low')
+            return new Promise(function(resolve, rejected) {
+              rejected('call-hand-too-low event')
+            })
+          } else {
+            state.lastHandCalledId = data.handid;
+            return games.updateLastHandCalled(data.handid, state.gameid)
+          }
+        })
+        .then(() => {
+          var currentTurnIndex = 0;
+          for(var i=0; i<state.players.length; i++) {
+            if(state.players[i].username == info.username)
+              currentTurnIndex = i;
+          }
+          var next = (currentTurnIndex + 1) % state.players.length
+          state.turn = state.players[next].username
+          return games.updateTurn(state.players[next].userid, state.gameid)
+        })
+        .then(() => {
+          io.to(state.gameid).emit('next-players-turn', info, state)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'draw-cards', function(info) {
+      gamecards.drawHandAndAdd(info.userid, info.gameid, info.numberOfCards)
+        .then(cards => {
+          for(var i=0; i<cards.length; i++) {
+            console.log('user ' + info.username + ' drew ' + cards[i].cardid)
+          }
+          socket.emit('draw-cards', cards);
+          io.to(info.gameid).emit('update-player-cards');
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'get-all-cards', function(info, cards, state) {
       gamecards.findCardsInPlay(state.gameid)
         .then(data => {
           var done = false;
@@ -336,7 +195,24 @@ const init = ( app, server ) => {
         })
     })
 
-    socket.on('ready', function(state) {
+    socket.on( 'join-room', function(info) {
+      socket.userid = info.userid;
+      socket.username = info.username;
+      socket.gameid = info.gameid
+      socket.join(info.gameid);
+    })
+
+    socket.on( 'message-send', function(info) {
+      messages.add(info.gameid, info.userid, info.message)
+        .then(() => {
+          io.to(info.gameid).emit('message-send', info);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'ready', function(state) {
       state.readyCount++;
       if(state.readyCount >= state.numberOfPlayers) {
         gamecards.reset(state.gameid)
@@ -351,9 +227,170 @@ const init = ( app, server ) => {
       }
     })
 
+    socket.on( 'start', function(state) {
+      games.changeStatus('in-progress', state.gameid)
+        .then(() => {
+          io.to(state.gameid).emit('start', state);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-cards', function(info, cards) {
+      gamecards.findNumberOfCardsByUserId(info.gameid, info.userid)
+        .then(data1 => {
+          info.numberOfCards = data1[0].count;
+          return gamecards.findCardsByUserId(info.gameid, info.userid)
+        })
+        .then(data2 => {
+          cards = data2;
+          socket.emit('update-cards', info, cards);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-cards-in-deck', function(state) {
+      gamecards.findCardsNotInPlay(state.gameid)
+        .then(data => {
+          state.cardsInDeck = data[0].count
+          socket.emit('update-cards-in-deck', state)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-last-hand-called', function(state) {
+      games.findById(state.gameid)
+        .then(data1 => {
+          state.lastHandCalledId = data1.last_hand_called;
+          return hands.findById(data1.last_hand_called)
+        })
+        .then(data2 => {
+          state.lastHandCalled = data2.description;
+          socket.emit('update-last-hand-called', state);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-number-of-players', function(state) {
+      gamecards.findNumberOfUsers(state.gameid)
+        .then(data => {
+          state.numberOfPlayers = data[0].count
+          socket.emit('update-number-of-players', state)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-players', function(state) {
+      gamecards.findDistinctUsers(state.gameid)
+        .then(data1 => {
+          return Promise.all(data1.map(playerPromise))
+        })
+        .then(data2 => {
+          state.players = data2;
+          return gamecards.findCardsInPlay(state.gameid)
+        })
+        .then(data3 => {
+          var done = false;
+          for(var i=0; i<state.players.length; i++) {
+            state.players[i].numberOfCards = 0;
+            for(var j=0; j<data3.length; j++) {
+              if(state.players[i].userid == data3[j].userid) {
+                state.players[i].numberOfCards++;
+                if(i == state.players.length-1 && j == data3.length-1)
+                  done = true;
+              }
+              
+            }
+          }
+          if(done){
+            return new Promise(function(resolve, reject) {
+              resolve(true)
+            })
+          }
+        })
+        .then(() => {
+          socket.emit('update-players', state)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-status', function(state) {
+      games.findById(state.gameid)
+        .then(data => {
+          state.status = data.status;
+          socket.emit('update-status', state);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'update-turn', function(state) {
+      games.findById(state.gameid)
+        .then(data1 => {
+          return users.findById(data1.players_turn)
+        })
+        .then(data2 => {
+          state.turn = data2.username;
+          socket.emit('update-turn', state);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
+    socket.on( 'user-joined', function(info) {
+      io.to(info.gameid).emit('user-joined', info);
+    })
+
+    socket.on( 'user-left', function(info) {
+      gamecards.deleteUser(info.userid, info.gameid)
+        .then(data => {
+          return gamecards.findDistinctUsers(info.gameid)
+        })
+        .then(data1 => {
+          if(data1.length <= 0) {
+            console.log('deleted game ' + info.gameid)
+            return gamecards.deleteGame(info.gameid)
+          } else {
+            socket.to(info.gameid).emit('user-left', info);
+            return new Promise(function(resolve, reject) {
+              reject('');
+            })
+          }
+        })
+        .then(() => {
+          return messages.delete(info.gameid)
+        })
+        .then(() => {
+          return games.deleteGame(info.gameid)
+        })
+        .then(() => {
+          socket.to(info.gameid).emit('user-left', info);
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    })
+
   });
 
 };
+
+function cardPromise(card) {
+  return cards.findById(card.cardid)
+}
 
 function playerCardsPromise(gameid, player) {
   return gamecards.findCardsByUserId(gameid, player.userid)
@@ -361,10 +398,6 @@ function playerCardsPromise(gameid, player) {
 
 function playerPromise(player) {
   return users.findById(player.userid)
-}
-
-function cardPromise(card) {
-  return cards.findById(card.cardid)
 }
 
 function doesHandExist(cards, handid) {
@@ -430,18 +463,6 @@ function doesHandExist(cards, handid) {
       })
     })
     .then(() => {
-      console.log('four ' + fours)
-      console.log('five ' + fives)
-      console.log('six ' + sixes)
-      console.log('seven ' + sevens)
-      console.log('eight ' + eights)
-      console.log('nine ' + nines)
-      console.log('tens ' + tens)
-      console.log('jacks ' + jacks)
-      console.log('queens ' + queens)
-      console.log('kings ' + kings)
-      console.log('aces ' + aces)
-      console.log('wilds ' + wilds)
       switch(handid) {
         case 1: //''
           console.log('error bsing blank')

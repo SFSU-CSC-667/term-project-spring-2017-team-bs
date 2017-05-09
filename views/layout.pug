@@ -14,13 +14,13 @@ html
     .navbar.navbar-default
       .container-fluid
         .navbar-header
-          a.navbar-brand(href='/')
-            img#navbarlogo(src='/images/bsHome.png')
+          a.navbar-brand#logo(href='/')
+            img#logoimg(src='/images/bsHome.png')
         ul.nav.navbar-nav.navbar-right
           if (typeof(username) !== 'undefined')
             p.navbar-text Hello #{username}!
             li
-              a(href='/logout') #[span.glyphicon.glyphicon-log-out] Logout
+              a#logout(href='/logout') #[span.glyphicon.glyphicon-log-out] Logout
           else
             li
               a(href='/register') #[span.glyphicon.glyphicon-user] Sign Up
