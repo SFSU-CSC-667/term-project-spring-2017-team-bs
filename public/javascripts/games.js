@@ -119,7 +119,7 @@ $(function () {
 
     //events
     socket.on('call-hand-too-low', function() {
-      alert("Your call is too low! Call something higher");
+      $('#callTooLowModal').modal();
     })
 
     socket.on('draw-cards', function(cards) {

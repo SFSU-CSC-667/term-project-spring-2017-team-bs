@@ -37,40 +37,25 @@ router.get('/', function(req, res, next) {
   }
 });
 
-//register page
-router.get('/register', function(req, res, next) {
-  if(!req.user)
-    res.render('register', { message: ''} );
-  else
-    res.render('register', {
-      message: '',
-      username: req.user.username
-    });
-});
-
-//user has registered
 router.post('/register', function(req, res, next) {
-  bcrypt.hash(req.body.password, 10)
+  bcrypt.hash(req.body.registerPassword, 10)
     .then(hash => {
-      return users.create(req.body.username, hash)
+      return users.create(req.body.registerUsername, hash)
     })
     .then(user => {
-      res.redirect('/login');
+      req.flash('error', 'Please log in');
+      res.redirect('/');
     })
     .catch(err => {
       console.log(err)
+      req.flash('error', 'That username already exists')
+      res.redirect('/');
     })
 });
 
-//login page
-router.get('/login', function(req, res, next) {
-  res.render('login', { message: req.flash('error') });
-});
-
-//user has logged in
 router.post('/login', passport.authenticate('local', {
   successRedirect: '/',
-  failureRedirect: '/login',
+  failureRedirect: '/',
   failureFlash: true
 }));
 

@@ -31,9 +31,10 @@ const init = () => {
         bcrypt.compare(password, user.password, function(err, res) {
           if(res == false)
             return cb(null, false, { message: 'Incorrect password' });
+          else
+            return cb(null, user);
         })
         
-        return cb(null, user);
       })
     }));
 };

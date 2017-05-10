@@ -96,7 +96,7 @@ block content
                 .input-group-btn
                   button.btn.btn-default#send(type='submit') Send
 
-  .modal.fade(role='dialog')#leaveModal
+  .modal.fade#leaveModal(role='dialog')
     .modal-dialog
       .modal-content
         .modal-header
@@ -108,6 +108,17 @@ block content
         .modal-footer
           button.btn.btn-danger#leaveModalLeave(type='button' data-dismiss='modal') Yes, I want to leave!
           button.btn.btn-success(type='button' data-dismiss='modal') No, keep playing!
+
+  .modal.fade#callTooLowModal(role='dialog')
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type='button' data-dismiss='modal') &times;
+          h4.modal-title Call too low!
+        .modal-body
+          p Call something higher!
+        .modal-footer
+          button.btn.btn-default(type='button' data-dismiss='modal') Close
 
 block sockets
   script(src='/socket.io/socket.io.js')

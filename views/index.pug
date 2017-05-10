@@ -9,9 +9,9 @@ block content
     .row
       img.img-responsive(src='/images/BSPOKER.png')
     .row.text-center#createGame
-      .btn.btn-info(type='button' data-toggle='modal' data-target='#createGameModal') Create a game
+      button.btn.btn-info(type='button' data-toggle='modal' data-target='#createGameModal') Create a game
     .row.text-center#joinGame
-      .btn.btn-info(type='button' data-toggle='modal' data-target='#joinGameModal') Join a game
+      button.btn.btn-info(type='button' data-toggle='modal' data-target='#joinGameModal') Join a game
 
   .modal.fade#createGameModal(role='dialog')
     .modal-dialog
@@ -57,5 +57,16 @@ block content
                         input.form-control(type='text' name='joinPassword' placeholder='Password' autocomplete='off')
                         span.input-group-btn
                           input.btn.btn-info(type='submit' value='Join')
+
+  .modal.fade#createGameRoomNameModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h4.modal-title Error
+          .modal-body
+            p Room name cannot be empty!
+          .modal-footer
+            button.btn.btn-default(type='button' data-dismiss='modal') Close
 
   script(src='/javascripts/home.js')

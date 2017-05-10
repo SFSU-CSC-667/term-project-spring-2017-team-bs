@@ -23,13 +23,85 @@ html
               a#logout(href='/logout') #[span.glyphicon.glyphicon-log-out] Logout
           else
             li
-              a(href='/register') #[span.glyphicon.glyphicon-user] Sign Up
+              a(href='#registerModal' data-toggle='modal' data-target='#registerModal') #[span.glyphicon.glyphicon-user] Sign Up
             li
-              a(href='/login') #[span.glyphicon.glyphicon-log-in] Login
+              a(href='#loginModal' data-toggle='modal' data-target='#loginModal') #[span.glyphicon.glyphicon-log-in] Login
+
+    .modal.fade#registerModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h4.modal-title Sign Up
+          .modal-body
+            form(method='POST' action='/register' onSubmit='return checkCredentials()')
+              .form-group
+                label(for='registerUsername') Username:
+                input.form-control#registerUsername(type='text' name='registerUsername')
+              .form-group
+                label(for='registerPassword') Password:
+                input.form-control#registerPassword(type='password' name='registerPassword')
+              .form-group
+                label(for='registerConfirmPassword') Confirm Password:
+                input.form-control#registerConfirmPassword(type='password' name='registerConfirmPassword')
+              input.btn.btn-info(type='submit' value='Sign Up')
+              button.btn.btn-default.pull-right(type='button' data-dismiss='modal') Close
+
+    .modal.fade#loginModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h4.modal-title Login
+          .modal-body
+            form(method='POST' action='/login')
+              .form-group
+                label(for='loginUsername') Username:
+                input.form-control#loginUsername(type='text' name='username')
+              .form-group
+                label(for='loginPassword') Password:
+                input.form-control#loginPassword(type='password' name='password')
+              input.btn.btn-info(type='submit' value='Log in')
+              button.btn.btn-default.pull-right(type='button' data-dismiss='modal') Close
+
+    .modal.fade#registerUsernameModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h4.modal-title Error
+          .modal-body
+            p Username cannot be empty!
+          .modal-footer
+            button.btn.btn-default(type='button' data-dismiss='modal') Close
+
+    .modal.fade#registerPasswordModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h4.modal-title Error
+          .modal-body
+            p Password must be at least 6 characters long!
+          .modal-footer
+            button.btn.btn-default(type='button' data-dismiss='modal') Close
+
+    .modal.fade#registerConfirmPasswordModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h4.modal-title Error
+          .modal-body
+            p Passwords do not match!
+          .modal-footer
+            button.btn.btn-default(type='button' data-dismiss='modal') Close
     
     block content
 
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js")
     script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js', integrity='sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa', crossorigin='anonymous')
+
+    script(src='/javascripts/nav.js')
     
     block sockets

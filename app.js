@@ -10,8 +10,6 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const flash = require('connect-flash');
 
-const db = require('./models/index');
-
 var index = require('./routes/index');
 
 const games = require('./routes/games/index');

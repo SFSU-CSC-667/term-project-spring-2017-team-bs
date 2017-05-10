@@ -1,7 +1,7 @@
 function checkRoomName() {
-  const roomName = document.getElementById("room_name");
+  const roomName = document.getElementById('room_name');
   if(roomName.value.length <= 0) {
-    alert("Room name cannot be empty!");
+    $('#createGameRoomNameModal').modal();
     return false;
   }
 }
