@@ -353,6 +353,43 @@ $(function () {
     socket.on('update-turn', function(state) {
       gameState.turn = state.turn;
       $('#turn').text('Player\'s Turn: ' + gameState.turn);
+      if($('#playerone').text() == gameState.turn) {
+        $('#playerone').css('font-weight', 'bold');
+        $('#playerone').css('text-decoration', 'underline');
+        $('#playertwo').css('font-weight', 'normal');
+        $('#playertwo').css('text-decoration', 'none');
+        $('#playerthree').css('font-weight', 'normal');
+        $('#playerthree').css('text-decoration', 'none');
+        $('#playerfour').css('font-weight', 'normal');
+        $('#playerfour').css('text-decoration', 'none');
+      } else if($('#playertwo').text() == gameState.turn) {
+        $('#playerone').css('font-weight', 'normal');
+        $('#playerone').css('text-decoration', 'none');
+        $('#playertwo').css('font-weight', 'bold');
+        $('#playertwo').css('text-decoration', 'underline');
+        $('#playerthree').css('font-weight', 'normal');
+        $('#playerthree').css('text-decoration', 'none');
+        $('#playerfour').css('font-weight', 'normal');
+        $('#playerfour').css('text-decoration', 'none');
+      } else if($('#playerthree').text() == gameState.turn) {
+        $('#playerone').css('font-weight', 'normal');
+        $('#playerone').css('text-decoration', 'none');
+        $('#playertwo').css('font-weight', 'normal');
+        $('#playertwo').css('text-decoration', 'none');
+        $('#playerthree').css('font-weight', 'bold');
+        $('#playerthree').css('text-decoration', 'underline');
+        $('#playerfour').css('font-weight', 'normal');
+        $('#playerfour').css('text-decoration', 'none');
+      } else if($('#playerfour').text() == gameState.turn) {
+        $('#playerone').css('font-weight', 'normal');
+        $('#playerone').css('text-decoration', 'none');
+        $('#playertwo').css('font-weight', 'normal');
+        $('#playertwo').css('text-decoration', 'none');
+        $('#playerthree').css('font-weight', 'normal');
+        $('#playerthree').css('text-decoration', 'none');
+        $('#playerfour').css('font-weight', 'normal');
+        $('#playerfour').css('text-decoration', 'underline');
+      }
       if (gameState.turn == myInfo.username && gameState.status == 'open') {
         $('#bs').prop('disabled', true);
         $('#call').prop('disabled', true);
@@ -593,7 +630,7 @@ function renderCard(playerNumber, cardid) {
       $('#player' + playerNumber + 'cards').append("<img src='/images/cardJokerRed.png' class='card'>")
       break;
     case 54:
-      $('#player' + playerNumber + 'cards').append("<img src='/images/cardJokerRed.png' class='card'>")
+      $('#player' + playerNumber + 'cards').append("<img src='/images/cardJokerBlack.png' class='card'>")
       break;
   }
 }
