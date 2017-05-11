@@ -273,18 +273,24 @@ $(function () {
           $('#playertwo').text('empty');
           $('#playerthree').text('empty');
           $('#playerfour').text('empty');
+          emptyHand('two');
+          emptyHand('three');
+          emptyHand('four');
           break;
         case 2:
           $('#playerone').text(myPlayers[0]);
           $('#playertwo').text(myPlayers[1]);
           $('#playerthree').text('empty');
           $('#playerfour').text('empty');
+          emptyHand('three');
+          emptyHand('four');
           break;
         case 3:
           $('#playerone').text(myPlayers[0]);
           $('#playertwo').text(myPlayers[1]);
           $('#playerthree').text(myPlayers[2]);
           $('#playerfour').text('empty');
+          emptyHand('four');
           break;
         case 4:
           $('#playerone').text(myPlayers[0]);
