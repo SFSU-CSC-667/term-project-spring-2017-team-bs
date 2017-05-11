@@ -270,15 +270,21 @@ $(function () {
       switch(myPlayers.length) {
         case 1:
           $('#playerone').text(myPlayers[0]);
+          $('#playertwo').text('empty');
+          $('#playerthree').text('empty');
+          $('#playerfour').text('empty');
           break;
         case 2:
           $('#playerone').text(myPlayers[0]);
           $('#playertwo').text(myPlayers[1]);
+          $('#playerthree').text('empty');
+          $('#playerfour').text('empty');
           break;
         case 3:
           $('#playerone').text(myPlayers[0]);
           $('#playertwo').text(myPlayers[1]);
           $('#playerthree').text(myPlayers[2]);
+          $('#playerfour').text('empty');
           break;
         case 4:
           $('#playerone').text(myPlayers[0]);
@@ -316,10 +322,6 @@ $(function () {
             }
           }
         }
-      }
-
-      if(gameState.status != 'open' && gameState.numberOfPlayers <= 1) {
-        socket.emit('win-message', myInfo, gameState)
       }
     })
 
