@@ -23,7 +23,7 @@ block content
           form(method='POST' action='/games' onSubmit='return checkRoomName()')
             .form-group
               label(for='room_name') Room Name
-              input.form-control#room_name(type='text' name='room_name')
+              input.form-control#room_name(type='text' name='room_name' autocomplete='off')
             .form-group
               label(for='password') Password (optional)
               input.form-control#password(type='password' name='password')

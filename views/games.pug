@@ -11,44 +11,39 @@ block content
       .row
         .btn.btn-danger#leave Leave
       .row      
-        .col-md-9.col-lg-9#playarea
+        .col-sm-9.col-md-9.col-lg-9#playarea
           .row
-            .playerarea.col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
-              .row#playerthreecards
-              .row
-                p#playerthree username here
+            .playerarea.col-xs-4.col-sm-4.col-md-4.col-lg-4.col-xs-offset-4.col-sm-offset-4.col-md-offset-4.col-lg-offset-4
+              .row.cards#playerthreecards
+              .row.player
+                p.text-center#playerthree username here
           .row
-            .playerarea.col-md-4.col-lg-4
-              .row#playertwocards
-              .row
-                p#playertwo username here
-            .col-md-4.col-lg-4
-              .row
+            .playerarea.col-xs-4.col-sm-4.col-md-4.col-lg-4
+              .row.cards#playertwocards
+              .row.player
+                p.text-center#playertwo username here
+            .middle.col-xs-4.col-sm-4.col-md-4.col-lg-4
+              .row.text-center
                 img.card(src='/images/cardBack.png')
-              .row
-                p#deck # cards in deck
-            .playerarea.col-md-4.col-lg-4
-              .row#playerfourcards
-              .row
-                p#playerfour username here
+              .row.text-center
+                p#deck cards in deck
+              .row.text-center
+                button.btn.btn-success#start Start
+                button.btn.btn-danger#bs BS
+                button.btn.btn-info#ready Ready
+                button.btn.btn-primary#draw Draw
+            .playerarea.col-xs-4.col-sm-4.col-md-4.col-lg-4
+              .row.cards#playerfourcards
+              .row.player
+                p.text-center#playerfour username here
           .row
-            .col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
-              button.btn.btn-success#start Start
-              button.btn.btn-danger#bs BS
-              button.btn.btn-info#ready Ready
-              button.btn.btn-primary#draw Draw
-          .row
-            .col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
-              p timer
-          .row
-            .playerarea.col-md-4.col-lg-4.col-md-offset-4.col-lg-offset-4
-              .row#playeronecards
-              .row
-                p#playerone username here
+            .playerarea.col-xs-4.col-sm-4.col-md-4.col-lg-4.col-xs-offset-4.col-sm-offset-4.col-md-offset-4.col-lg-offset-4
+              .row.cards#playeronecards
+              .row.player
+                p.text-center#playerone username here
           .row#calls
-            p Calls
-            form#callForm
-              .col-md-5.col-lg-5
+            p.text-center Calls
+              .col-xs-5.col-sm-5.col-md-5.col-lg-5
                 p Quantity
                 select.form-control#callQuantity
                   option one
@@ -65,7 +60,7 @@ block content
                   option twelve
                   option thirteen
                   option fourteen
-              .col-md-5.col-lg-5
+              .col-xs-5.col-sm-5.col-md-5.col-lg-5
                 p Rank
                 select.form-control#callRank
                   option 4
@@ -79,16 +74,16 @@ block content
                   option Q
                   option K
                   option A
-              .col-md-2.col-lg-2
-                button.btn.btn-success#call(type='submit') Call
-        .col-md-3.col-lg-3
-          #settings
+              .col-xs-2.col-sm-2.col-md-2.col-lg-2
+                button.btn.btn-warning#call(type='submit') Call
+        .col-sm-3.col-md-3.col-lg-3#misc
+          .row#settings
             p#numPlayers Current # of players:
             p#turn Player's turn:
-          #lasthandcalled
+          .row#lasthandcalled
             p Last Hand Called:
             p#lastHand
-          #chatbox
+          .row#chatbox
             ul#messages
             form#chatform
               .input-group

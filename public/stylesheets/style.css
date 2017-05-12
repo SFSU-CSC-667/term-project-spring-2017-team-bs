@@ -1,21 +1,55 @@
-body {
+body.bodyy {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: #666666;
 }
 
-#calls, #playarea {
+#playarea {
   border: 1px solid black;
+  background-color: #22aa44;
+  min-width: 458px;
+  min-height: 512px;
 }
 
-#chatbox, #settings, #lasthandcalled {
+.playerarea .cards {
+  border: 1px solid white;
+  text-align: center;
+  min-height: 100px;
+  min-width: 152px;
+}
+
+.playerarea .player {
+  border: 1px solid white;
+  min-width: 152px;
+  padding: 5px;
+}
+
+.card {
+  display: inline-block;
+  margin: 15px 0;
+  width: 50px;
+  height: auto;
+}
+
+.middle {
+  min-width: 152px;
+}
+
+#calls {
+  border: 1px solid yellow;
+  background-color: #9cebb0;
+}
+
+#misc #chatbox, #settings, #lasthandcalled {
   border: 1px solid red;
+  background-color: white;
 }
 
 ul#messages {
   list-style-type: none;
   padding: 10px;
-  width: 100%;
-  height: 200px;
+  min-width: 100%;
+  min-height: 200px;
   overflow-y: auto;
   word-wrap: break-word;
 }
@@ -25,7 +59,7 @@ ul#messages li {
 }
 
 ul#messages li.system {
-  color: rgb(0, 97, 255);
+  color: #0061ff;
 }
 
 ul#messages li:nth-child(odd) {
@@ -34,11 +68,6 @@ ul#messages li:nth-child(odd) {
 
 #createGame, #joinGame {
   padding: 10px;
-}
-
-.card {
-  width: 50px;
-  height: auto;
 }
 
 #logoimg {

@@ -234,7 +234,7 @@ $(function () {
 
     socket.on('update-cards-in-deck', function(state) {
       gameState.cardsInDeck = state.cardsInDeck;
-      $('#deck').text(gameState.cardsInDeck);
+      $('#deck').text(gameState.cardsInDeck + " cards in deck");
     })
 
     socket.on('update-last-hand-called', function(state) {
