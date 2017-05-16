@@ -20,6 +20,8 @@ router.get('/', function(req, res, next) {
         })
       })
       .catch(err => {
+        req.flash('error', 'An internal error has occured')
+        res.redirect('/')
         console.log(err)
       })
   } else {
@@ -32,6 +34,8 @@ router.get('/', function(req, res, next) {
         })
       })
       .catch(err => {
+        req.flash('error', 'An internal error has occured')
+        res.redirect('/')
         console.log(err)
       })
   }
@@ -82,6 +86,8 @@ router.post('/games', function(req, res, next) {
           res.redirect('/games/' + data3.gameid)
         })
         .catch(err => {
+          req.flash('error', 'An internal error has occured')
+          res.redirect('/')
           console.log(err)
         })
     } else {
@@ -96,6 +102,8 @@ router.post('/games', function(req, res, next) {
           res.redirect('/games/' + data2.gameid)
         })
         .catch(err => {
+          req.flash('error', 'An internal error has occured')
+          res.redirect('/')
           console.log(err)
         })
     }
@@ -144,6 +152,8 @@ router.post('/games/join', function(req, res, next) {
         res.redirect('/games/' + data3.gameid)
       })
       .catch(err => {
+        req.flash('error', 'An internal error has occured')
+        res.redirect('/')
         console.log(err)
       })
   }
