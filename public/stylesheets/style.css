@@ -4,6 +4,10 @@ body.bodyy {
   background-color: #666666;
 }
 
+ul.rules {
+  list-style-type: disc;
+}
+
 #playarea {
   border: 1px solid black;
   background-color: #22aa44;

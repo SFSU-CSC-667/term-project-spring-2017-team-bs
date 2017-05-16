@@ -16,6 +16,9 @@ html
         .navbar-header
           a.navbar-brand#logo(href='/')
             img#logoimg(src='/images/bsHome.png')
+        ul.nav.navbar-nav
+          li
+            a.nav.navbar-nav(href='#rulesModal' data-toggle='modal' data-target='#rulesModal') #[span.glyphicon.glyphicon-info-sign] How to play
         ul.nav.navbar-nav.navbar-right
           if (typeof(username) !== 'undefined')
             p.navbar-text Hello #{username}!
@@ -94,6 +97,40 @@ html
             h4.modal-title Error
           .modal-body
             p Passwords do not match!
+          .modal-footer
+            button.btn.btn-default(type='button' data-dismiss='modal') Close
+
+    .modal.fade#rulesModal(role='dialog')
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type='button' data-dismiss='modal') &times;
+            h2.modal-title How to Play
+          .modal-body
+            h3 Objective:
+            p Be the last one standing!
+            h3 Rules:
+            ul.rules
+              li Each player starts with 3 cards
+              li Each turn, a player can call a hand that beats the previously called hand or call BS on the previously called hand
+              li #[b When calling a hand, all cards owned by players are considered, but keep in mind that you only know your own cards]
+              li When a player calls BS, each player shows their cards to see if the previously called hand exists
+              li If the hand exists, the BS is considered a failure, and the player who called the BS loses a card
+              li If the hand does not exist, the BS is considered a success, and the player who called the hand loses a card
+              li If a player runs out of cards, they are out of the game
+              li A new round starts, and rounds continue until there is only one player with cards left
+              li The player who lost a card gets to go first, or if that player is out, the next player goes first
+            h3 Wilds:
+            ul.rules
+              li Twos, Threes, and Jokers are considered wild cards
+              li Wild cards can become any rank and any suit
+              li There are 4 Twos, 4 Threes, and 2 Jokers, for a total of 10 wild cards in a deck
+            h3 Tips:
+            ul.rules
+              li Try to call a high enough hand that it will not come back to you even higher
+              li Try to call hands that consider other players' having wild cards, because 10 out of the 54 cards in the deck are wild
+              li Lying about your cards can help if players believe your lie and call a higher quantity of what you said, making it easier to call a successful BS on them
+              li Never call a hand that requires more cards than there are cards on the field
           .modal-footer
             button.btn.btn-default(type='button' data-dismiss='modal') Close
     
