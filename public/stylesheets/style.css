@@ -15,14 +15,14 @@ ul.rules {
   min-height: 512px;
 }
 
-.playerarea .cards {
+.cards {
   border: 1px solid white;
   text-align: center;
   min-height: 100px;
   min-width: 152px;
 }
 
-.playerarea .player {
+.player {
   border: 1px solid white;
   min-width: 152px;
   padding: 5px;
@@ -44,7 +44,7 @@ ul.rules {
   background-color: #9cebb0;
 }
 
-#misc #chatbox, #settings, #lasthandcalled {
+#misc, #chatbox, #settings, #lasthandcalled {
   border: 1px solid red;
   background-color: white;
 }
@@ -53,7 +53,7 @@ ul#messages {
   list-style-type: none;
   padding: 10px;
   min-width: 100%;
-  min-height: 200px;
+  height: 200px;
   overflow-y: auto;
   word-wrap: break-word;
 }
